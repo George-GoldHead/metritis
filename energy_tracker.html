@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Μετρητής Ενέργειας</title>
+<meta name="theme-color" content="#0d0f18">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Μετρητής">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f18;
+    --surface: #161927;
+    --surface2: #1e2235;
+    --border: #2a2f4a;
+    --text: #e2e8f0;
+    --muted: #5a6380;
+    --danger: #ef4444;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    /* Gas */
+    --gas: #e11d48;
+    --gas-dim: rgba(225,29,72,0.15);
+    --gas-glow: rgba(225,29,72,0.3);
+    /* Electric */
+    --elec: #60a5fa;
+    --elec-dim: rgba(96,165,250,0.15);
+    --elec-glow: rgba(96,165,250,0.3);
+    /* Provider */
+    --prov: #34d399;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; padding: 0 0 100px; }
+
+  /* ── TOP BAR ─────────────────────────────────── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: var(--bg); z-index: 50;
+  }
+  .app-logo { font-family: var(--mono); font-size: 0.95rem; letter-spacing: 0.12em; color: var(--text); display: flex; align-items: center; gap: 10px; }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+  .icon-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 8px; padding: 7px 12px;
+    cursor: pointer; font-family: var(--mono); font-size: 0.7rem;
+    letter-spacing: 0.05em; transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+  }
+  .icon-btn:hover { border-color: var(--text); color: var(--text); }
+  .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+  #importFile { display: none; }
+
+  /* ── TABS ────────────────────────────────────── */
+  .tabs { display: flex; padding: 0 24px; border-bottom: 1px solid var(--border); gap: 4px; }
+  .tab {
+    font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.08em;
+    padding: 14px 20px; cursor: pointer; border-bottom: 2px solid transparent;
+    color: var(--muted); transition: all 0.15s; display: flex; align-items: center; gap: 8px;
+    margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active.gas { color: var(--gas); border-bottom-color: var(--gas); }
+  .tab.active.elec { color: var(--elec); border-bottom-color: var(--elec); }
+
+  /* ── MAIN CONTENT ────────────────────────────── */
+  .content { width: 100%; padding: 24px 24px 0; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── SUMMARY CARDS ───────────────────────────── */
+  .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; max-width: 900px; }
+  .scard {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px; position: relative; overflow: hidden;
+  }
+  .scard::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .scard.provider-card::before { background: var(--prov); }
+  .scard.year-card::before { background: var(--gas); }
+  .scard.year-card.elec::before { background: var(--elec); }
+  .scard-label { font-family: var(--mono); font-size: 0.6rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+  .scard-value { font-family: var(--mono); font-size: 1.55rem; font-weight: 600; line-height: 1; margin-bottom: 5px; }
+  .scard.provider-card .scard-value { color: var(--prov); }
+  .scard.year-card .scard-value { color: var(--gas); }
+  .scard.year-card.elec .scard-value { color: var(--elec); }
+  .scard-sub { font-size: 0.72rem; color: var(--muted); }
+
+  /* ── PERIOD ROW ──────────────────────────────── */
+  .period-row {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 13px 18px; margin-bottom: 24px;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 10px; max-width: 900px;
+  }
+  .period-label { font-family: var(--mono); font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+  .period-selects { display: flex; align-items: center; gap: 8px; flex: 1; flex-wrap: wrap; }
+  select {
+    font-family: var(--mono); font-size: 0.75rem;
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 10px; cursor: pointer; outline: none;
+  }
+  select:focus { border-color: var(--prov); }
+
+  /* ── YEAR SECTION ────────────────────────────── */
+  .year-section { margin-bottom: 32px; }
+  .year-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .year-title { font-family: var(--mono); font-size: 1rem; font-weight: 600; letter-spacing: 0.1em; }
+  .year-title.gas { color: var(--gas); }
+  .year-title.elec { color: var(--elec); }
+  .year-total { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 3px 12px; border-radius: 20px; }
+  .year-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* ── MONTHS GRID ─────────────────────────────── */
+  .months-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 600px) { .months-grid { grid-template-columns: 1fr; } .summary { grid-template-columns: 1fr; } }
+
+  /* ── MONTH CARD ──────────────────────────────── */
+  /* ── MONTHS ROW ──────────────────────────────────────── */
+  .months-row { display: flex; flex-direction: row; gap: 14px; overflow-x: auto; padding-bottom: 10px; width: 100%; }
+  .months-row::-webkit-scrollbar { height: 5px; }
+  .months-row::-webkit-scrollbar-track { background: var(--surface); border-radius: 10px; }
+  .months-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+  .month-card { min-width: 180px; max-width: 180px; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .month-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .month-name { font-family: var(--mono); font-size: 0.65rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text); }
+  .month-total { font-family: var(--mono); font-size: 0.6rem; background: var(--surface); border: 1px solid var(--border); color: var(--prov); padding: 1px 7px; border-radius: 20px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { border-bottom: 1px solid var(--border); }
+  th { font-family: var(--mono); font-size: 0.58rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; padding: 7px 10px; text-align: left; font-weight: 400; }
+  tbody tr { border-bottom: 1px solid rgba(42,47,74,0.5); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.prov-row { background: rgba(52,211,153,0.05); }
+  tbody tr.prov-row td:first-child { border-left: 2px solid var(--prov); padding-left: 8px; }
+  td { font-family: var(--mono); font-size: 0.72rem; padding: 5px 8px; }
+  .td-date { color: var(--muted); font-size: 0.7rem; }
+  .td-diff { font-weight: 600; }
+  .td-diff.gas { color: var(--gas); }
+  .td-diff.elec { color: var(--elec); }
+  .td-diff.zero { color: var(--muted); font-weight: 400; }
+  .prov-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--prov); margin-right: 4px; vertical-align: middle; }
+  .del-btn { background: none; border: none; color: var(--border); cursor: pointer; font-size: 0.82rem; padding: 2px 5px; border-radius: 4px; transition: all 0.15s; }
+  .del-btn:hover { color: var(--danger); background: rgba(239,68,68,0.1); }
+
+  /* ── FAB ─────────────────────────────────────── */
+  .fab {
+    position: fixed; bottom: 28px; right: 28px;
+    width: 54px; height: 54px; border-radius: 50%;
+    border: none; font-size: 1.5rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, box-shadow 0.15s; z-index: 100;
+  }
+  .fab.gas { background: var(--gas); color: #000; box-shadow: 0 4px 20px var(--gas-glow); }
+  .fab.elec { background: var(--elec); color: #000; box-shadow: 0 4px 20px var(--elec-glow); }
+  .fab:hover { transform: scale(1.08); }
+
+  /* ── MODALS ──────────────────────────────────── */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .overlay.open { display: flex; }
+  .modal { background: #ffffff; border-radius: 16px; padding: 26px; width: 90%; max-width: 340px; box-shadow: 0 24px 80px rgba(0,0,0,0.5); border: none; }
+.modal.gas-modal { box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 2px rgba(225,29,72,0.25); }
+.modal.elec-modal { box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 2px rgba(96,165,250,0.25); }
+.modal.settings-modal { box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 2px rgba(52,211,153,0.2); }
+  .modal-title { font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .modal-title.gas { color: var(--gas); }
+  .modal .modal-title { color: #1e293b; }
+  .modal .modal-title.gas { color: var(--gas); }
+  .modal .modal-title.elec { color: var(--elec); }
+  .modal .modal-title.settings { color: var(--prov); }
+  .modal-title.elec { color: var(--elec); }
+  .modal-title.settings { color: var(--prov); }
+  .field { margin-bottom: 13px; }
+  .field label { display: block; font-family: var(--mono); font-size: 0.58rem; color: #64748b; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 5px; }
+  .input-wrap { position: relative; }
+  .input-wrap .ico { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; font-weight: 700; pointer-events: none; font-family: var(--mono); letter-spacing: 0.05em; }
+  .input-wrap.gas .ico { color: var(--gas); }
+  .input-wrap.elec .ico { color: var(--elec); }
+  .modal .input-wrap .ico { color: #0f172a; }
+  .input-wrap .ico-date::after { content: 'ΗΜ'; }
+  .input-wrap .ico-time::after { content: 'ΩΡΑ'; }
+  input[type="date"], input[type="time"], input[type="number"], input[type="text"] {
+    width: 100%; font-family: var(--mono); font-size: 0.88rem;
+    background: #f8fafc; color: #0f172a;
+    border: 1px solid #e2e8f0; border-radius: 7px;
+    padding: 9px 50px 9px 11px; outline: none; transition: border-color 0.15s;
+  }
+  input:focus { border-color: var(--prov); }
+  .modal input { color: #0f172a; background: #f8fafc; border-color: #e2e8f0; }
+  .modal input:focus { border-color: var(--prov); }
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator { opacity: 0; position: absolute; right: 0; width: 100%; cursor: pointer; }
+  .checkbox-row { display: flex; align-items: center; gap: 10px; }
+  .checkbox-row input[type="checkbox"] { width: auto; padding: 0; accent-color: var(--prov); }
+  .checkbox-row label { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .modal .checkbox-row label { color: #475569; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .modal-actions .btn { flex: 1; text-align: center; font-family: var(--mono); font-size: 0.72rem; padding: 10px; border-radius: 7px; border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; }
+  .btn-save.gas { background: var(--gas); color: #fff; border-color: var(--gas); font-weight: 600; }
+  .btn-save.gas:hover { background: #fbbf24; }
+  .btn-save.elec { background: var(--elec); color: #fff; border-color: var(--elec); font-weight: 600; }
+  .btn-save.elec:hover { background: #7dd3fc; }
+  .btn-save.settings { background: var(--prov); color: #000; border-color: var(--prov); font-weight: 600; }
+  .btn-cancel { background: none; color: var(--muted); }
+  .btn-cancel:hover { color: var(--text); border-color: var(--border); }
+  .modal .btn-cancel { color: #64748b; border-color: #e2e8f0; background: #f8fafc; }
+  .modal .btn-cancel:hover { color: #1e293b; border-color: #cbd5e1; }
+
+  /* Settings sections */
+  .settings-section { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .settings-section:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .settings-section-title { font-family: var(--mono); font-size: 0.6rem; color: #475569; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
+
+  .empty { text-align: center; color: var(--muted); font-family: var(--mono); font-size: 0.82rem; line-height: 2; padding: 60px 0; }
+
+  /* ── MOBILE RESPONSIVE ───────────────────────────────── */
+  @media (max-width: 768px) {
+    body { padding: 0 0 80px; }
+    .topbar { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+    .app-logo { font-size: 0.82rem; }
+    .topbar-actions { gap: 6px; }
+    .icon-btn { font-size: 0.65rem; padding: 6px 10px; }
+    .tabs { padding: 0 14px; }
+    .tab { padding: 12px 14px; font-size: 0.72rem; }
+    .content { padding: 14px 14px 0; }
+    .summary { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .scard { padding: 14px; }
+    .scard-value { font-size: 1.2rem; }
+    .period-row { padding: 10px 14px; }
+    select { font-size: 0.7rem; padding: 5px 8px; }
+    .year-title { font-size: 0.85rem; }
+    .month-card { min-width: 150px; max-width: 150px; }
+    .month-name { font-size: 0.6rem; }
+    td { font-size: 0.68rem; padding: 5px 6px; }
+    th { font-size: 0.52rem; padding: 5px 6px; }
+    .fab { width: 50px; height: 50px; font-size: 1.4rem; bottom: 20px; right: 16px; }
+    .modal { padding: 20px; }
+    .modal-title { font-size: 0.75rem; }
+    input[type="date"], input[type="time"], input[type="number"], input[type="text"] { font-size: 0.82rem; padding: 8px 46px 8px 10px; }
+  }
+  @media (max-width: 400px) {
+    .summary { grid-template-columns: 1fr; }
+    .scard-value { font-size: 1.4rem; }
+    .month-card { min-width: 140px; max-width: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="app-logo">⚡ ΜΕΤΡΗΤΗΣ ΕΝΕΡΓΕΙΑΣ</div>
+  <div class="topbar-actions">
+    <button class="icon-btn" onclick="exportData()">↑ Export</button>
+    <label class="icon-btn" for="importFile">↓ Import</label>
+    <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+    <button class="icon-btn" onclick="openSettings()">⚙ Ρυθμίσεις</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active gas" onclick="switchTab('gas')">🔥 ΑΕΡΙΟ</div>
+  <div class="tab elec" onclick="switchTab('elec')">⚡ ΡΕΥΜΑ</div>
+</div>
+
+<!-- GAS PANEL -->
+<div class="content">
+  <div id="panel-gas" class="panel active">
+    <div class="summary">
+      <div class="scard provider-card">
+        <div class="scard-label">Περίοδος Παρόχου</div>
+        <div class="scard-value" id="gas-sumProvider">—</div>
+        <div class="scard-sub" id="gas-sumProviderLabel">—</div>
+      </div>
+      <div class="scard year-card">
+        <div class="scard-label">Σύνολο Έτους</div>
+        <div class="scard-value" id="gas-sumYear">—</div>
+        <div class="scard-sub" id="gas-sumYearLabel">—</div>
+      </div>
+    </div>
+    <div class="period-row">
+      <div class="period-label">Περίοδος Παρόχου:</div>
+      <div class="period-selects">
+        <select id="gas-selStart" onchange="renderPanel('gas')"></select>
+        <span style="color:var(--muted)">→</span>
+        <select id="gas-selEnd" onchange="renderPanel('gas')"></select>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px"><button class="icon-btn" id="toggleTime-gas" onclick="toggleTime('gas')">🕐 Εμφάνιση Ώρας</button><button class="icon-btn danger" data-reset-gas onclick="resetTab('gas')">✕ Reset Αερίου</button></div>
+    <div id="gas-app"></div>
+  </div>
+
+  <div id="panel-elec" class="panel">
+    <div class="summary">
+      <div class="scard provider-card">
+        <div class="scard-label">Περίοδος Παρόχου</div>
+        <div class="scard-value" id="elec-sumProvider">—</div>
+        <div class="scard-sub" id="elec-sumProviderLabel">—</div>
+      </div>
+      <div class="scard year-card elec">
+        <div class="scard-label">Σύνολο Έτους</div>
+        <div class="scard-value" id="elec-sumYear">—</div>
+        <div class="scard-sub" id="elec-sumYearLabel">—</div>
+      </div>
+    </div>
+    <div class="period-row">
+      <div class="period-label">Περίοδος Παρόχου:</div>
+      <div class="period-selects">
+        <select id="elec-selStart" onchange="renderPanel('elec')"></select>
+        <span style="color:var(--muted)">→</span>
+        <select id="elec-selEnd" onchange="renderPanel('elec')"></select>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px"><button class="icon-btn" id="toggleTime-elec" onclick="toggleTime('elec')">🕐 Εμφάνιση Ώρας</button><button class="icon-btn danger" data-reset-elec onclick="resetTab('elec')">✕ Reset Ρεύματος</button></div>
+    <div id="elec-app"></div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab gas" id="fab" onclick="openAddModal()">+</button>
+
+<!-- ADD MODAL -->
+<div class="overlay" id="addOverlay">
+  <div class="modal gas-modal">
+    <div class="modal-title gas" id="addModalTitle">🔥 ΝΕΑ ΜΕΤΡΗΣΗ</div>
+    <div class="field">
+      <label>Ημερομηνία</label>
+      <div class="input-wrap gas" id="dateWrap">
+        <input type="date" id="mDate">
+        <span class="ico ico-date"></span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Ώρα (προαιρετικό)</label>
+      <div class="input-wrap gas" id="timeWrap">
+        <input type="time" id="mTime">
+        <span class="ico ico-time"></span>
+      </div>
+    </div>
+    <div class="field">
+      <label id="readingLabel">Ένδειξη Μετρητή (m³)</label>
+      <div class="input-wrap gas" id="readWrap">
+        <input type="number" id="mRead" step="0.001" placeholder="πχ 5004.584">
+        <span class="ico" id="readIco">🔥</span>
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="mProvider">
+      <label for="mProvider"><span class="prov-dot"></span>Καταμέτρηση Παρόχου</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save gas" id="btnSave" onclick="addEntry()">Αποθήκευση</button>
+      <button class="btn-cancel btn" onclick="closeAdd()">Άκυρο</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal settings-modal" style="max-width:380px">
+    <div class="modal-title settings">⚙ ΡΥΘΜΙΣΕΙΣ ΠΑΡΟΧΩΝ</div>
+    <div class="settings-section">
+      <div class="settings-section-title">🔥 <span>ΑΕΡΙΟ</span></div>
+      <div class="field"><label>Όνομα Παρόχου</label>
+        <div class="input-wrap"><input type="text" id="s-gas-provider" placeholder="πχ EDA Thess"></div>
+      </div>
+      <div class="field"><label>Αριθμός Μετρητή</label>
+        <div class="input-wrap"><input type="text" id="s-gas-meter" placeholder="πχ 123456789"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">⚡ <span>ΡΕΥΜΑ</span></div>
+      <div class="field"><label>Όνομα Παρόχου</label>
+        <div class="input-wrap"><input type="text" id="s-elec-provider" placeholder="πχ ΔΕΗ"></div>
+      </div>
+      <div class="field"><label>Αριθμός Μετρητή</label>
+        <div class="input-wrap"><input type="text" id="s-elec-meter" placeholder="πχ 987654321"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save settings btn" onclick="saveSettings()">Αποθήκευση</button>
+      <button class="btn-cancel btn" onclick="closeSettings()">Άκυρο</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY = 'energy_tracker_v1';
+let currentTab = 'gas';
+let pendingDel = null;
+
+let state = {
+  gas:  { data: [], nextId: 1 },
+  elec: { data: [], nextId: 1 },
+  settings: {
+    gas:  { provider: '', meter: '' },
+    elec: { provider: '', meter: '' }
+  }
+};
+
+// ── PERSIST ──────────────────────────────────────────────────
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) { state = JSON.parse(raw); return; }
+  } catch(e) {}
+  // Default gas data
+  state.gas.data = [
+    {id:1,  d:"2026-01-22",t:"08:00",r:4769.458,p:true },
+    {id:2,  d:"2026-02-01",t:"08:00",r:4778.321,p:false},
+    {id:3,  d:"2026-02-02",t:"08:00",r:4787.303,p:false},
+    {id:4,  d:"2026-02-03",t:"08:00",r:4797.748,p:false},
+    {id:5,  d:"2026-02-04",t:"08:00",r:4805.485,p:false},
+    {id:6,  d:"2026-02-05",t:"08:00",r:4812.648,p:false},
+    {id:7,  d:"2026-02-06",t:"08:00",r:4818.796,p:false},
+    {id:8,  d:"2026-02-07",t:"08:00",r:4825.663,p:false},
+    {id:9,  d:"2026-02-08",t:"08:00",r:4830.000,p:false},
+    {id:10, d:"2026-02-09",t:"08:00",r:4835.151,p:false},
+    {id:11, d:"2026-02-10",t:"08:00",r:4844.379,p:false},
+    {id:12, d:"2026-02-11",t:"08:00",r:4853.215,p:false},
+    {id:13, d:"2026-02-12",t:"08:00",r:4861.141,p:false},
+    {id:14, d:"2026-02-13",t:"08:00",r:4866.606,p:false},
+    {id:15, d:"2026-02-14",t:"08:00",r:4872.000,p:false},
+    {id:16, d:"2026-02-15",t:"08:00",r:4878.000,p:false},
+    {id:17, d:"2026-02-16",t:"08:00",r:4884.200,p:false},
+    {id:18, d:"2026-02-17",t:"08:00",r:4890.522,p:false},
+    {id:19, d:"2026-02-18",t:"08:00",r:4897.881,p:false},
+    {id:20, d:"2026-02-19",t:"08:00",r:4907.004,p:false},
+    {id:21, d:"2026-02-20",t:"08:00",r:4912.432,p:false},
+    {id:22, d:"2026-02-21",t:"08:00",r:4918.885,p:true },
+    {id:23, d:"2026-02-28",t:"08:00",r:4966.044,p:false},
+    {id:24, d:"2026-03-01",t:"08:00",r:4970.528,p:false},
+    {id:25, d:"2026-03-02",t:"08:00",r:4980.740,p:false},
+    {id:26, d:"2026-03-03",t:"08:00",r:4987.046,p:false},
+    {id:27, d:"2026-03-04",t:"08:00",r:4991.785,p:false},
+    {id:28, d:"2026-03-05",t:"08:00",r:4996.610,p:false},
+    {id:29, d:"2026-03-06",t:"08:00",r:5001.717,p:false},
+    {id:30, d:"2026-03-07",t:"11:00",r:5004.584,p:true },
+  ];
+  state.gas.nextId = 31;
+  state.settings.gas.provider = 'EDA Thess';
+  save();
+}
+
+// ── TABS ─────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab.${tab}`).classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  const fab = document.getElementById('fab');
+  fab.className = 'fab ' + tab;
+  renderPanel(tab);
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('s-gas-provider').value  = state.settings.gas.provider  || '';
+  document.getElementById('s-gas-meter').value     = state.settings.gas.meter     || '';
+  document.getElementById('s-elec-provider').value = state.settings.elec.provider || '';
+  document.getElementById('s-elec-meter').value    = state.settings.elec.meter    || '';
+  document.getElementById('settingsOverlay').classList.add('open');
+}
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
+function saveSettings() {
+  state.settings.gas.provider  = document.getElementById('s-gas-provider').value.trim();
+  state.settings.gas.meter     = document.getElementById('s-gas-meter').value.trim();
+  state.settings.elec.provider = document.getElementById('s-elec-provider').value.trim();
+  state.settings.elec.meter    = document.getElementById('s-elec-meter').value.trim();
+  save(); closeSettings();
+}
+
+// ── ADD MODAL ─────────────────────────────────────────────────
+function openAddModal() {
+  const tab = currentTab;
+  const now = new Date(), pad = n => String(n).padStart(2,'0');
+  document.getElementById('mDate').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  document.getElementById('mTime').value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  document.getElementById('mRead').value = '';
+  document.getElementById('mProvider').checked = false;
+
+  const isGas = tab === 'gas';
+  document.getElementById('addModalTitle').className = 'modal-title ' + tab;
+  document.getElementById('addModalTitle').textContent = isGas ? '🔥 ΝΕΑ ΜΕΤΡΗΣΗ' : '⚡ ΝΕΑ ΜΕΤΡΗΣΗ';
+  document.getElementById('dateWrap').className = 'input-wrap ' + tab;
+  document.getElementById('timeWrap').className = 'input-wrap ' + tab;
+  document.getElementById('readWrap').className = 'input-wrap ' + tab;
+  document.getElementById('readingLabel').textContent = isGas ? 'Ένδειξη Μετρητή (m³)' : 'Ένδειξη Μετρητή (kWh)';
+  document.getElementById('readIco').textContent = isGas ? '🔥' : '⚡';
+  document.getElementById('mRead').placeholder = isGas ? 'πχ 5004.584' : 'πχ 12345.6';
+  document.getElementById('btnSave').className = 'btn-save btn ' + tab;
+
+  document.querySelector('#addOverlay .modal').className = 'modal ' + (tab==='gas'?'gas-modal':'elec-modal');
+  document.getElementById('addOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('mRead').focus(), 100);
+}
+function closeAdd() { document.getElementById('addOverlay').classList.remove('open'); }
+
+document.getElementById('addOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('addOverlay')) closeAdd();
+});
+document.getElementById('settingsOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('settingsOverlay')) closeSettings();
+});
+
+// ── ADD ENTRY ─────────────────────────────────────────────────
+function addEntry() {
+  const tab = currentTab;
+  const d = document.getElementById('mDate').value;
+  const t = document.getElementById('mTime').value || '08:00';
+  const r = parseFloat(document.getElementById('mRead').value.replace(',','.'));
+  const p = document.getElementById('mProvider').checked;
+  if (!d || isNaN(r)) { document.getElementById('mRead').focus(); return; }
+  state[tab].data.push({ id: state[tab].nextId++, d, t, r, p });
+  save(); closeAdd(); renderPanel(tab);
+}
+
+// ── DELETE ────────────────────────────────────────────────────
+function delEntry(tab, id) {
+  const key = tab+'_'+id;
+  if (pendingDel === key) {
+    state[tab].data = state[tab].data.filter(x => x.id !== id);
+    pendingDel = null; save(); renderPanel(tab);
+  } else {
+    pendingDel = key;
+    const btn = document.querySelector('[data-del="'+key+'"]');
+    if (btn) { btn.textContent='✓'; btn.style.color='var(--danger)'; btn.style.background='rgba(239,68,68,0.15)'; }
+    setTimeout(() => { if(pendingDel===key){pendingDel=null; renderPanel(tab);} }, 2000);
+  }
+}
+
+// ── RESET ─────────────────────────────────────────────────────
+function resetTab(tab) {
+  const key = 'RESET_'+tab;
+  const attr = tab==='gas' ? '[data-reset-gas]' : '[data-reset-elec]';
+  const label = tab==='gas' ? '✕ Reset Αερίου' : '✕ Reset Ρεύματος';
+  if (pendingDel !== key) {
+    pendingDel = key;
+    const btn = document.querySelector(attr);
+    if (btn) { btn.textContent='✓ Σίγουρα;'; btn.style.color='var(--danger)'; }
+    setTimeout(() => {
+      if(pendingDel===key){ pendingDel=null; const b=document.querySelector(attr); if(b){b.textContent=label;b.style.color='';} }
+    }, 3000);
+    return;
+  }
+  pendingDel = null;
+  state[tab].data=[]; state[tab].nextId=1;
+  save(); renderPanel(tab);
+}
+
+// ── EXPORT / IMPORT ───────────────────────────────────────────
+function exportData() {
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'energy_tracker_backup.json'; a.click();
+}
+function importData(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      state = JSON.parse(ev.target.result);
+      save(); renderPanel('gas'); renderPanel('elec');
+    } catch { alert('Σφάλμα αρχείου JSON.'); }
+  };
+  reader.readAsText(file); e.target.value='';
+}
+
+// ── TIME TOGGLE ──────────────────────────────────────────────
+const showTime = { gas: false, elec: false };
+function toggleTime(tab) {
+  showTime[tab] = !showTime[tab];
+  const btn = document.getElementById('toggleTime-'+tab);
+  if (showTime[tab]) {
+    btn.textContent = '🕐 Απόκρυψη Ώρας';
+    btn.style.borderColor = 'var(--prov)';
+    btn.style.color = 'var(--prov)';
+  } else {
+    btn.textContent = '🕐 Εμφάνιση Ώρας';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+  renderPanel(tab);
+}
+
+// ── RENDER PANEL ──────────────────────────────────────────────
+function renderPanel(tab) {
+  const unit = tab === 'gas' ? 'm³' : 'kWh';
+  const sorted = [...state[tab].data].sort((a,b) =>
+    new Date(a.d+'T'+(a.t||'08:00')) - new Date(b.d+'T'+(b.t||'08:00'))
+  );
+
+  // Provider selects
+  const selStart = document.getElementById(tab+'-selStart');
+  const selEnd   = document.getElementById(tab+'-selEnd');
+  const oldStart = selStart.value, oldEnd = selEnd.value;
+  selStart.innerHTML = ''; selEnd.innerHTML = '';
+
+  sorted.forEach(item => {
+    const dt = new Date(item.d);
+    const label = dt.getDate()+'/'+(dt.getMonth()+1)+(item.p?' ●':'');
+    const val = item.d+'T'+(item.t||'08:00');
+    [selStart,selEnd].forEach(s => {
+      const o = document.createElement('option');
+      o.value=val; o.textContent=label; s.appendChild(o);
+    });
+  });
+
+  const provDates = sorted.filter(x=>x.p);
+  selStart.value = (oldStart && [...selStart.options].some(o=>o.value===oldStart)) ? oldStart
+    : (provDates.length>=2 ? provDates[provDates.length-2].d+'T'+(provDates[provDates.length-2].t||'08:00') : selStart.options[0]?.value||'');
+  selEnd.value = (oldEnd && [...selEnd.options].some(o=>o.value===oldEnd)) ? oldEnd
+    : (provDates.length>=1 ? provDates[provDates.length-1].d+'T'+(provDates[provDates.length-1].t||'08:00') : selEnd.options[selEnd.options.length-1]?.value||'');
+
+  const startDT = new Date(selStart.value);
+  const endDT   = new Date(selEnd.value);
+
+  // Compute diffs
+  const withDiff = sorted.map((item,idx) => ({
+    ...item, diff: +(item.r - (idx>0?sorted[idx-1].r:item.r)).toFixed(3)
+  }));
+
+  // Group by year → month
+  const years = {};
+  withDiff.forEach(item => {
+    const dt = new Date(item.d);
+    const yr = dt.getFullYear();
+    const mk = `${yr}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+    const mlabel = dt.toLocaleString('el-GR',{month:'long'});
+    if(!years[yr]) years[yr]={};
+    if(!years[yr][mk]) years[yr][mk]={label:mlabel,items:[]};
+    years[yr][mk].items.push(item);
+  });
+
+  // Summaries
+  const now = new Date(), curYr = now.getFullYear();
+  const beforeEnd   = withDiff.filter(x => new Date(x.d+'T'+(x.t||'08:00')) <= endDT);
+  const beforeStart = withDiff.filter(x => new Date(x.d+'T'+(x.t||'08:00')) <= startDT);
+  const sumProvider = (beforeEnd.length && beforeStart.length)
+    ? +(beforeEnd[beforeEnd.length-1].r - beforeStart[beforeStart.length-1].r).toFixed(3) : 0;
+  const curYearItems = withDiff.filter(x => new Date(x.d).getFullYear()===curYr);
+  const sumYear = curYearItems.length>1
+    ? +(curYearItems[curYearItems.length-1].r - curYearItems[0].r).toFixed(3) : 0;
+
+  document.getElementById(tab+'-sumProvider').textContent = sumProvider.toFixed(3)+' '+unit;
+  const ps = selStart.options[selStart.selectedIndex]?.textContent.replace(' ●','')||'—';
+  const pe = selEnd.options[selEnd.selectedIndex]?.textContent.replace(' ●','')||'—';
+  document.getElementById(tab+'-sumProviderLabel').textContent = ps+' → '+pe;
+  document.getElementById(tab+'-sumYear').textContent = sumYear.toFixed(3)+' '+unit;
+  document.getElementById(tab+'-sumYearLabel').textContent = 'έτος '+curYr;
+
+  // Render
+  const app = document.getElementById(tab+'-app');
+  if (sorted.length===0) {
+    app.innerHTML='<div class="empty">Δεν υπάρχουν μετρήσεις.<br>Πάτα + για να προσθέσεις.</div>';
+    return;
+  }
+
+  const yearKeys = Object.keys(years).sort((a,b)=>b-a);
+  app.innerHTML = yearKeys.map(yr => {
+    const monthKeys = Object.keys(years[yr]).sort();
+    const yrItems = Object.values(years[yr]).flatMap(m=>m.items).sort((a,b)=>new Date(a.d)-new Date(b.d));
+    const yearTotal = yrItems.length>1 ? (yrItems[yrItems.length-1].r-yrItems[0].r).toFixed(3) : '0.000';
+
+    const monthsHTML = '<div class="months-row">' +
+      monthKeys.map(mk => {
+        const {label,items} = years[yr][mk];
+        const mTotal = items.length>1 ? (items[items.length-1].r-items[0].r).toFixed(3) : items[0]?.diff.toFixed(3)||'0.000';
+        const rows = items.map(item => {
+          const dt = new Date(item.d);
+          return `<tr class="${item.p?'prov-row':''}">
+            <td class="td-date">${item.p?'<span class="prov-dot"></span>':''}${dt.getDate()}/${dt.getMonth()+1}</td>
+            ${showTime[tab]?`<td style="color:var(--prov);font-size:0.68rem">${item.t||'—'}</td>`:''}
+            <td>${item.r.toFixed(3)}</td>
+            <td class="td-diff ${tab} ${item.diff<=0?'zero':''}">${item.diff>0?item.diff.toFixed(3):'—'}</td>
+            <td><button class="del-btn" data-del="${tab}_${item.id}" onclick="delEntry('${tab}',${item.id})">✕</button></td>
+          </tr>`;
+        }).join('');
+        return `<div class="month-card">
+          <div class="month-head">
+            <div class="month-name">${label}</div>
+            <div class="month-total">${mTotal} ${unit}</div>
+          </div>
+          <table>
+            <thead><tr><th>Ημ.</th>${showTime[tab]?'<th style="color:var(--prov)">Ώρα</th>':''}<th>${unit}</th><th>Διαφ.</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+      }).join('') + '</div>';
+
+    return `<div class="year-section">
+      <div class="year-header">
+        <div class="year-title ${tab}">${yr}</div>
+        <div class="year-total">${yearTotal} ${unit} σύνολο</div>
+        <div class="year-line"></div>
+      </div>
+      ${monthsHTML}
+    </div>`;
+  }).join('');
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') { closeAdd(); closeSettings(); }
+  if (e.key==='Enter' && document.getElementById('addOverlay').classList.contains('open')) addEntry();
+});
+
+load();
+renderPanel('gas');
+renderPanel('elec');
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
