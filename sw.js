@@ -1,4 +1,4 @@
-const CACHE = 'metrhtis-v2';
+const CACHE = 'metrhtis-v4';
 const FILES = [
   './index.html',
   './manifest.json',
