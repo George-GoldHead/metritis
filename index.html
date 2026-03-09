@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="el">
+<html lang="el" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -13,286 +13,183 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d0f18;
-    --surface: #161927;
-    --surface2: #1e2235;
-    --border: #2a2f4a;
-    --text: #e2e8f0;
-    --muted: #5a6380;
-    --danger: #ef4444;
-    --mono: 'JetBrains Mono', monospace;
-    --sans: 'Poppins', sans-serif;
-    --gas: #ff5c35;
-    --gas-dim: rgba(255,92,53,0.15);
-    --gas-glow: rgba(255,92,53,0.3);
-    --elec: #60a5fa;
-    --elec-dim: rgba(96,165,250,0.15);
-    --elec-glow: rgba(96,165,250,0.3);
-    --prov: #34d399;
+    --bg:#0d0f18;--surface:#161927;--surface2:#1e2235;--border:#2a2f4a;
+    --text:#e2e8f0;--muted:#5a6380;--danger:#ef4444;
+    --mono:'JetBrains Mono',monospace;--sans:'Poppins',sans-serif;
+    --gas:#facc15;--gas-dim:rgba(250,204,21,0.15);--gas-glow:rgba(250,204,21,0.4);
+    --elec:#0e7490;--elec-dim:rgba(14,116,144,0.15);--elec-glow:rgba(14,116,144,0.4);
+    --prov:#047857;
+    --modal-bg:#ffffff;--modal-text:#0f172a;--modal-border:#e2e8f0;
+    --modal-muted:#64748b;--input-bg:#f8fafc;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; padding: 0 0 100px; }
-
-  /* ── TOP BAR ─────────────────────────────────── */
-  .topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 16px; border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; background: var(--bg); z-index: 50;
-    gap: 8px;
-  }
-  .app-logo { font-family: var(--mono); font-size: 0.9rem; letter-spacing: 0.1em; color: var(--text); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-  .topbar-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
-  .icon-btn {
-    background: var(--surface); border: 1px solid var(--border);
-    color: var(--muted); border-radius: 8px; padding: 8px 12px;
-    cursor: pointer; font-family: var(--mono); font-size: 0.72rem;
-    letter-spacing: 0.04em; transition: all 0.15s; display: flex; align-items: center; gap: 6px;
-    white-space: nowrap;
-  }
-  .icon-btn:hover { border-color: var(--text); color: var(--text); }
-  .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
-  #importFile { display: none; }
-
-  /* ── TABS ────────────────────────────────────── */
-  .tabs { display: flex; padding: 0 16px; border-bottom: 1px solid var(--border); gap: 4px; }
-  .tab {
-    font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.06em;
-    padding: 14px 20px; cursor: pointer; border-bottom: 2px solid transparent;
-    color: var(--muted); transition: all 0.15s; display: flex; align-items: center; gap: 8px;
-    margin-bottom: -1px; flex: 1; justify-content: center;
-  }
-  .tab:hover { color: var(--text); }
-  .tab.active.gas { color: var(--gas); border-bottom-color: var(--gas); }
-  .tab.active.elec { color: var(--elec); border-bottom-color: var(--elec); }
-
-  /* ── MAIN CONTENT ────────────────────────────── */
-  .content { width: 100%; padding: 16px 16px 0; }
-  .panel { display: none; }
-  .panel.active { display: block; }
-
-  /* ── SUMMARY CARDS ───────────────────────────── */
-  .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-  .scard {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 16px; position: relative; overflow: hidden;
-  }
-  .scard::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
-  .scard.provider-card::before { background: var(--prov); }
-  .scard.year-card::before { background: var(--gas); }
-  .scard.year-card.elec::before { background: var(--elec); }
-  .scard-label { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
-  .scard-value { font-family: var(--mono); font-size: 1.3rem; font-weight: 600; line-height: 1; margin-bottom: 4px; }
-  .scard.provider-card .scard-value { color: var(--prov); }
-  .scard.year-card .scard-value { color: var(--gas); }
-  .scard.year-card.elec .scard-value { color: var(--elec); }
-  .scard-sub { font-size: 0.7rem; color: var(--muted); }
-
-  /* ── PERIOD ROW ──────────────────────────────── */
-  .period-row {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;
-  }
-  .period-label { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
-  .period-selects { display: flex; align-items: center; gap: 8px; }
-  .period-selects select { flex: 1; }
-  select {
-    font-family: var(--mono); font-size: 0.8rem;
-    background: var(--surface2); color: var(--text);
-    border: 1px solid var(--border); border-radius: 6px;
-    padding: 8px 10px; cursor: pointer; outline: none;
-    width: 100%;
-  }
-  select:focus { border-color: var(--prov); }
-
-  /* ── TOOLBAR ROW ─────────────────────────────── */
-  .toolbar-row {
-    display: flex; justify-content: flex-end; gap: 8px;
-    margin-bottom: 16px; flex-wrap: wrap;
-  }
-
-  /* ── YEAR SECTION ────────────────────────────── */
-  .year-section { margin-bottom: 28px; }
-  .year-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-  .year-title { font-family: var(--mono); font-size: 1rem; font-weight: 600; letter-spacing: 0.1em; }
-  .year-title.gas { color: var(--gas); }
-  .year-title.elec { color: var(--elec); }
-  .year-total { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
-  .year-line { flex: 1; height: 1px; background: var(--border); }
-
-  /* ── MONTHS SCROLL ───────────────────────────── */
-  .months-row {
-    display: flex; flex-direction: row; gap: 12px;
-    overflow-x: auto; padding-bottom: 12px; width: 100%;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-  }
-  .months-row::-webkit-scrollbar { height: 4px; }
-  .months-row::-webkit-scrollbar-track { background: var(--surface); border-radius: 10px; }
-  .months-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-
-  /* ── MONTH CARD ──────────────────────────────── */
-  .month-card {
-    /* On mobile: full viewport width minus padding */
-    min-width: calc(100vw - 44px);
-    max-width: calc(100vw - 44px);
-    flex-shrink: 0;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; overflow: hidden;
-    scroll-snap-align: start;
-  }
-
-  /* On larger screens: fixed card width */
-  @media (min-width: 600px) {
-    .month-card { min-width: 260px; max-width: 260px; }
-  }
-
-  .month-head {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 14px; border-bottom: 1px solid var(--border);
-    background: var(--surface2);
-  }
-  .month-name { font-family: var(--mono); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text); }
-  .month-total { font-family: var(--mono); font-size: 0.68rem; background: var(--surface); border: 1px solid var(--border); color: var(--prov); padding: 2px 8px; border-radius: 20px; }
-
-  table { width: 100%; border-collapse: collapse; }
-  thead tr { border-bottom: 1px solid var(--border); }
-  th { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 12px; text-align: left; font-weight: 400; }
-  tbody tr { border-bottom: 1px solid rgba(42,47,74,0.5); transition: background 0.1s; }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--surface2); }
-  tbody tr.prov-row { background: rgba(52,211,153,0.05); }
-  tbody tr.prov-row td:first-child { border-left: 2px solid var(--prov); padding-left: 10px; }
-  td { font-family: var(--mono); font-size: 0.8rem; padding: 7px 12px; }
-  .td-date { color: var(--muted); font-size: 0.78rem; }
-  .td-diff { font-weight: 600; }
-  .td-diff.gas { color: var(--gas); }
-  .td-diff.elec { color: var(--elec); }
-  .td-diff.zero { color: var(--muted); font-weight: 400; }
-  .prov-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--prov); margin-right: 4px; vertical-align: middle; }
-  .del-btn { background: none; border: none; color: var(--border); cursor: pointer; font-size: 0.9rem; padding: 4px 6px; border-radius: 4px; transition: all 0.15s; }
-  .del-btn:hover { color: var(--danger); background: rgba(239,68,68,0.1); }
-
-  /* ── FAB ─────────────────────────────────────── */
-  .fab {
-    position: fixed; bottom: 24px; right: 20px;
-    width: 58px; height: 58px; border-radius: 50%;
-    border: none; font-size: 1.6rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform 0.15s, box-shadow 0.15s; z-index: 100;
-  }
-  .fab.gas { background: var(--gas); color: #fff; box-shadow: 0 4px 20px var(--gas-glow); }
-  .fab.elec { background: var(--elec); color: #000; box-shadow: 0 4px 20px var(--elec-glow); }
-  .fab:active { transform: scale(0.94); }
-
-  /* ── MODALS ──────────────────────────────────── */
-  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
-  .overlay.open { display: flex; }
-
-  @media (min-width: 500px) {
-    .overlay { align-items: center; }
-    .modal { border-radius: 16px !important; }
-  }
-
-  .modal {
-    background: #ffffff; border-radius: 20px 20px 0 0; padding: 24px 20px 32px;
-    width: 100%; max-width: 420px;
-    box-shadow: 0 -8px 40px rgba(0,0,0,0.4);
-  }
-  .modal.gas-modal { box-shadow: 0 -8px 40px rgba(0,0,0,0.4), 0 0 0 2px rgba(225,29,72,0.2); }
-  .modal.elec-modal { box-shadow: 0 -8px 40px rgba(0,0,0,0.4), 0 0 0 2px rgba(96,165,250,0.2); }
-  .modal.settings-modal { box-shadow: 0 -8px 40px rgba(0,0,0,0.4), 0 0 0 2px rgba(52,211,153,0.15); max-width: 420px; }
-
-  /* Drag handle */
-  .modal::before {
-    content: ''; display: block; width: 40px; height: 4px;
-    background: #cbd5e1; border-radius: 2px;
-    margin: 0 auto 20px; 
-  }
-
-  .modal-title { font-family: var(--mono); font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; color: #1e293b; }
-  .modal .modal-title.gas { color: var(--gas); }
-  .modal .modal-title.elec { color: var(--elec); }
-  .modal .modal-title.settings { color: #0f766e; }
-
-  .field { margin-bottom: 14px; }
-  .field label { display: block; font-family: var(--mono); font-size: 0.62rem; color: #64748b; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
-  .input-wrap { position: relative; }
-  .input-wrap .ico { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 0.78rem; font-weight: 700; pointer-events: none; font-family: var(--mono); letter-spacing: 0.04em; color: #94a3b8; }
-  .input-wrap.gas .ico { color: var(--gas); }
-  .input-wrap.elec .ico { color: var(--elec); }
-  .input-wrap .ico-date::after { content: 'ΗΜ'; }
-  .input-wrap .ico-time::after { content: 'ΩΡΑ'; }
-
-  input[type="date"], input[type="time"], input[type="number"], input[type="text"] {
-    width: 100%; font-family: var(--mono); font-size: 1rem;
-    background: #f8fafc; color: #0f172a;
-    border: 1px solid #e2e8f0; border-radius: 10px;
-    padding: 12px 50px 12px 14px; outline: none; transition: border-color 0.15s;
-    -webkit-appearance: none;
-  }
-  input:focus { border-color: #34d399; box-shadow: 0 0 0 3px rgba(52,211,153,0.15); }
-  input[type="date"]::-webkit-calendar-picker-indicator,
-  input[type="time"]::-webkit-calendar-picker-indicator { opacity: 0; position: absolute; right: 0; width: 100%; cursor: pointer; }
-
-  .checkbox-row { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
-  .checkbox-row input[type="checkbox"] { width: 20px; height: 20px; padding: 0; accent-color: var(--prov); cursor: pointer; }
-  .checkbox-row label { font-family: var(--mono); font-size: 0.78rem; color: #475569; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-
-  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-  .modal-actions .btn { flex: 1; text-align: center; font-family: var(--mono); font-size: 0.8rem; padding: 13px; border-radius: 10px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.15s; }
-  .btn-save.gas { background: var(--gas); color: #fff; border-color: var(--gas); font-weight: 600; }
-  .btn-save.elec { background: var(--elec); color: #000; border-color: var(--elec); font-weight: 600; }
-  .btn-save.settings { background: #0d9488; color: #fff; border-color: #0d9488; font-weight: 600; }
-  .btn-cancel { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
-  .btn-cancel:hover { color: #1e293b; border-color: #cbd5e1; }
-
-  /* Settings sections */
-  .settings-section { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #e2e8f0; }
-  .settings-section:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-  .settings-section-title { font-family: var(--mono); font-size: 0.65rem; color: #64748b; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
-
-  .empty { text-align: center; color: var(--muted); font-family: var(--mono); font-size: 0.85rem; line-height: 2.2; padding: 60px 0; }
+  [data-theme="light"]{--bg:#f0f4f8;--surface:#ffffff;--surface2:#e8edf3;--border:#cbd5e1;--text:#0f172a;--text2:#1e293b;--muted:#334155;--danger:#dc2626;--gas:#be123c;--gas-dim:rgba(190,18,60,0.12);--gas-glow:rgba(190,18,60,0.25);--elec:#1d4ed8;--elec-dim:rgba(29,78,216,0.12);--elec-glow:rgba(29,78,216,0.25);--prov:#047857;--modal-bg:#ffffff;--modal-text:#0f172a;--modal-border:#cbd5e1;--modal-muted:#334155;--input-bg:#f8fafc;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 100px;transition:background 0.2s;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:50;gap:8px;transition:background 0.2s;}
+  .app-logo{font-family:var(--mono);font-size:0.88rem;letter-spacing:0.1em;color:var(--text);display:flex;align-items:center;gap:8px;white-space:nowrap;}
+  .topbar-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+  .icon-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:7px 11px;cursor:pointer;font-family:var(--mono);font-size:0.68rem;letter-spacing:0.04em;transition:all 0.15s;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+  .icon-btn:hover{border-color:var(--text);color:var(--text);}
+  .icon-btn.danger:hover{border-color:var(--danger);color:var(--danger);}
+  .icon-btn.active{border-color:var(--prov);color:var(--prov);}
+  #importFile{display:none;}
+  .tabs{display:flex;border-bottom:1px solid var(--border);}
+  .tab{font-family:var(--sans);font-size:1rem;font-weight:600;padding:17px 0;cursor:pointer;border-bottom:3px solid transparent;color:var(--muted);transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:-1px;flex:1;}
+  .tab:hover{color:var(--text);}
+  .tab.active.gas{color:var(--gas);border-bottom-color:var(--gas);}
+  .tab.active.elec{color:var(--elec);border-bottom-color:var(--elec);}
+  .tab-bolt{color:var(--elec);}
+  .content{width:100%;padding:16px 16px 0;}
+  .panel{display:none;}.panel.active{display:block;}
+  .summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .scard{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative;overflow:hidden;transition:background 0.2s;}
+  .scard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .scard.provider-card::before{background:var(--gas);}
+  .scard.provider-card.elec::before{background:var(--elec);}
+  .scard.year-card::before{background:var(--gas);}
+  .scard.year-card.elec::before{background:var(--elec);}
+  .scard-label{font-family:var(--mono);font-size:0.57rem;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;}
+  .scard-value{font-family:var(--mono);font-size:1.2rem;font-weight:600;line-height:1;margin-bottom:4px;}
+  .scard.provider-card::before{background:var(--gas);}
+  .scard.provider-card .scard-value{color:var(--gas);}
+  .scard.provider-card.elec::before{background:var(--elec);}
+  .scard.provider-card.elec .scard-value{color:var(--elec);}
+  .scard.year-card .scard-value{color:var(--gas);}
+  .scard.year-card.elec .scard-value{color:var(--elec);}
+  :root .scard.provider-card .scard-value{text-shadow:0 0 10px var(--gas-glow);}
+  :root .scard.provider-card.elec .scard-value{text-shadow:0 0 10px var(--elec-glow);}
+  :root .scard.year-card .scard-value{text-shadow:0 0 10px var(--gas-glow);}
+  :root .scard.year-card.elec .scard-value{text-shadow:0 0 10px var(--elec-glow);}
+  [data-theme="light"] .scard-value{text-shadow:none;}
+  .scard-sub{font-size:0.67rem;color:var(--muted);}
+  .period-row{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px;transition:background 0.2s;}
+  .period-label{font-family:var(--mono);font-size:0.57rem;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+  .period-selects{display:flex;align-items:center;gap:8px;}
+  .period-selects select{flex:1;}
+  select{font-family:var(--mono);font-size:0.78rem;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;cursor:pointer;outline:none;width:100%;transition:background 0.2s;}
+  select:focus{border-color:var(--prov);}
+  .toolbar-row{display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .year-section{margin-bottom:28px;}
+  .year-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+  .year-title{font-family:var(--mono);font-size:1rem;font-weight:600;letter-spacing:0.1em;}
+  .year-title.gas{color:var(--gas);}.year-title.elec{color:var(--elec);}
+  .year-total{font-family:var(--mono);font-size:1rem;font-weight:600;background:var(--surface);border:1px solid var(--border);padding:3px 10px;border-radius:20px;white-space:nowrap;}
+  .year-total.gas{color:var(--gas);}
+  .year-total.elec{color:var(--elec);}
+  .year-line{flex:1;height:1px;background:var(--border);}
+  .months-row{display:flex;flex-direction:row;gap:12px;overflow-x:auto;padding-bottom:12px;width:100%;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+  .months-row::-webkit-scrollbar{height:4px;}
+  .months-row::-webkit-scrollbar-track{background:var(--surface);border-radius:10px;}
+  .months-row::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
+  .month-card{min-width:calc(100vw - 44px);max-width:calc(100vw - 44px);flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;scroll-snap-align:start;transition:background 0.2s;}
+  @media(min-width:600px){.month-card{min-width:290px;max-width:290px;}}
+  .month-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface2);}
+  .month-name{font-family:var(--sans);font-size:0.85rem;font-weight:700;text-transform:capitalize;color:var(--text);}
+  .month-total{font-family:var(--mono);font-size:0.68rem;background:var(--surface);border:1px solid var(--border);color:var(--prov);padding:3px 9px;border-radius:20px;}
+  .month-stats{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border);}
+  .stat-item{padding:8px 0;text-align:center;border-right:1px solid var(--border);}
+  .stat-item:last-child{border-right:none;}
+  .stat-label{font-family:var(--mono);font-size:0.52rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;}
+  .stat-value{font-family:var(--mono);font-size:0.8rem;font-weight:600;}
+  .stat-value.gas{color:var(--gas);}.stat-value.elec{color:var(--elec);}.stat-value.avg{color:var(--prov);}
+  table{width:100%;border-collapse:collapse;}
+  thead tr{border-bottom:1px solid var(--border);}
+  th{font-family:var(--mono);font-size:0.6rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;padding:8px 12px;text-align:left;font-weight:400;}
+  tbody tr{border-bottom:1px solid rgba(42,47,74,0.4);transition:background 0.1s;}
+  [data-theme="light"] tbody tr{border-bottom:1px solid rgba(203,213,225,0.5);}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--surface2);}
+  tbody tr.prov-row{background:rgba(52,211,153,0.06);}
+  tbody tr.prov-row td:first-child{border-left:2px solid var(--prov);padding-left:10px;}
+  td{font-family:var(--mono);font-size:0.8rem;padding:7px 12px;color:var(--text);}
+  .td-date{color:var(--muted);font-size:0.78rem;}
+  .td-diff{font-weight:600;}
+  .td-diff.gas{color:var(--gas);}.td-diff.elec{color:var(--elec);}
+  :root .td-diff.gas{text-shadow:0 0 6px var(--gas-glow);}
+  :root .td-diff.elec{text-shadow:0 0 6px var(--elec-glow);}
+  [data-theme="light"] .td-diff{text-shadow:none;}
+  .td-diff.zero{color:var(--muted);font-weight:400;}
+  .prov-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--prov);margin-right:4px;vertical-align:middle;}
+  .del-btn{background:none;border:none;color:var(--border);cursor:pointer;font-size:0.9rem;padding:4px 6px;border-radius:4px;transition:all 0.15s;}
+  .del-btn:hover{color:var(--danger);background:rgba(239,68,68,0.1);}
+  .fab{position:fixed;bottom:24px;right:20px;width:58px;height:58px;border-radius:50%;border:none;font-size:1.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.15s;z-index:100;}
+  .fab.gas{background:var(--gas);color:#fff;box-shadow:0 4px 24px var(--gas-glow);}
+  .fab.elec{background:var(--elec);color:#000;box-shadow:0 4px 24px var(--elec-glow);}
+  .fab:active{transform:scale(0.92);}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+  .overlay.open{display:flex;}
+  @media(min-width:500px){.overlay{align-items:center;}.modal{border-radius:20px !important;}}
+  .modal{background:var(--modal-bg);border-radius:24px 24px 0 0;padding:8px 20px 32px;width:100%;max-width:440px;box-shadow:0 -8px 40px rgba(0,0,0,0.4);}
+  .modal.gas-modal{box-shadow:0 -8px 40px rgba(0,0,0,0.4),0 0 0 2px rgba(255,92,53,0.2);}
+  .modal.elec-modal{box-shadow:0 -8px 40px rgba(0,0,0,0.4),0 0 0 2px rgba(96,165,250,0.2);}
+  .modal.settings-modal,.modal.info-modal{box-shadow:0 -8px 40px rgba(0,0,0,0.4),0 0 0 2px rgba(52,211,153,0.12);}
+  .drag-handle{width:44px;height:5px;background:#cbd5e1;border-radius:3px;margin:12px auto 20px;}
+  .modal-title{font-family:var(--mono);font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:8px;color:var(--modal-text);}
+  .modal .modal-title.gas{color:var(--gas);}.modal .modal-title.elec{color:var(--elec);}
+  .modal .modal-title.settings{color:#0d9488;}.modal .modal-title.info{color:var(--elec);}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-family:var(--mono);font-size:0.6rem;color:var(--modal-muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+  .input-wrap{position:relative;}
+  .input-wrap .ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:0.75rem;pointer-events:none;font-family:var(--mono);color:#94a3b8;}
+  .input-wrap.gas .ico{color:var(--gas);}.input-wrap.elec .ico{color:var(--elec);}
+  .input-wrap .ico-date::after{content:'ΗΜ';}.input-wrap .ico-time::after{content:'ΩΡΑ';}
+  input[type="date"],input[type="time"],input[type="number"],input[type="text"]{width:100%;font-family:var(--mono);font-size:1rem;background:var(--input-bg);color:var(--modal-text);border:1.5px solid var(--modal-border);border-radius:10px;padding:12px 50px 12px 14px;outline:none;transition:border-color 0.15s;-webkit-appearance:none;}
+  input:focus{border-color:var(--prov);box-shadow:0 0 0 3px rgba(52,211,153,0.12);}
+  input[type="date"]::-webkit-calendar-picker-indicator,input[type="time"]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;right:0;width:100%;cursor:pointer;}
+  .checkbox-row{display:flex;align-items:center;gap:12px;padding:4px 0;}
+  .checkbox-row input[type="checkbox"]{width:20px;height:20px;padding:0;accent-color:var(--prov);cursor:pointer;}
+  .checkbox-row label{font-family:var(--mono);font-size:0.78rem;color:var(--modal-muted);cursor:pointer;display:flex;align-items:center;gap:6px;}
+  .modal-actions{display:flex;gap:10px;margin-top:20px;}
+  .modal-actions .btn{flex:1;text-align:center;font-family:var(--mono);font-size:0.8rem;padding:13px;border-radius:10px;border:1.5px solid var(--modal-border);cursor:pointer;transition:all 0.15s;}
+  .btn-save.gas{background:var(--gas);color:#fff;border-color:var(--gas);font-weight:600;}
+  .btn-save.elec{background:var(--elec);color:#000;border-color:var(--elec);font-weight:600;}
+  .btn-save.settings{background:#0d9488;color:#fff;border-color:#0d9488;font-weight:600;}
+  .btn-cancel{background:var(--input-bg);color:var(--modal-muted);border-color:var(--modal-border);}
+  .btn-cancel:hover{color:var(--modal-text);}
+  .settings-section{margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--modal-border);}
+  .settings-section:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .settings-section-title{font-family:var(--mono);font-size:0.62rem;color:var(--modal-muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;font-weight:600;}
+  .info-block{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--modal-border);}
+  .info-block:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .info-block-title{font-family:var(--mono);font-size:0.62rem;color:var(--modal-muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;font-weight:600;}
+  .info-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;}
+  .info-row span:first-child{font-family:var(--mono);font-size:0.75rem;color:var(--modal-muted);}
+  .info-row span:last-child{font-family:var(--mono);font-size:0.75rem;color:var(--modal-text);font-weight:600;}
+  .info-desc{font-size:0.78rem;color:var(--modal-muted);line-height:1.6;margin-top:4px;}
+  .info-version{display:inline-block;background:var(--elec);color:#000;font-family:var(--mono);font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px;vertical-align:middle;}
+  .empty{text-align:center;color:var(--muted);font-family:var(--mono);font-size:0.85rem;line-height:2.2;padding:60px 0;}
 </style>
 </head>
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar">
   <div class="app-logo">⚡ ΜΕΤΡΗΤΗΣ</div>
   <div class="topbar-actions">
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">☀️ Light</button>
     <button class="icon-btn" onclick="exportData()">↑ Export</button>
     <label class="icon-btn" for="importFile">↓ Import</label>
     <input type="file" id="importFile" accept=".json" onchange="importData(event)">
-    <button class="icon-btn" onclick="openSettings()">⚙ Ρυθμίσεις</button>
+    <button class="icon-btn" onclick="openSettings()">⚙</button>
+    <button class="icon-btn" onclick="openInfo()">ℹ</button>
   </div>
 </div>
 
-<!-- TABS -->
 <div class="tabs">
   <div class="tab active gas" onclick="switchTab('gas')">🔥 ΑΕΡΙΟ</div>
-  <div class="tab elec" onclick="switchTab('elec')">⚡ ΡΕΥΜΑ</div>
+  <div class="tab elec" onclick="switchTab('elec')"><span class="tab-bolt">&#9889;</span> ΡΕΥΜΑ</div>
 </div>
 
-<!-- GAS PANEL -->
 <div class="content">
   <div id="panel-gas" class="panel active">
     <div class="summary">
-      <div class="scard provider-card">
-        <div class="scard-label">Περίοδος Παρόχου</div>
-        <div class="scard-value" id="gas-sumProvider">—</div>
-        <div class="scard-sub" id="gas-sumProviderLabel">—</div>
-      </div>
-      <div class="scard year-card">
-        <div class="scard-label">Σύνολο Έτους</div>
-        <div class="scard-value" id="gas-sumYear">—</div>
-        <div class="scard-sub" id="gas-sumYearLabel">—</div>
-      </div>
+      <div class="scard provider-card"><div class="scard-label">Περίοδος Παρόχου</div><div class="scard-value" id="gas-sumProvider">—</div><div class="scard-sub" id="gas-sumProviderLabel">—</div></div>
+      <div class="scard year-card"><div class="scard-label">Σύνολο Έτους</div><div class="scard-value" id="gas-sumYear">—</div><div class="scard-sub" id="gas-sumYearLabel">—</div></div>
     </div>
     <div class="period-row">
       <div class="period-label">Περίοδος Παρόχου:</div>
       <div class="period-selects">
         <select id="gas-selStart" onchange="renderPanel('gas')"></select>
-        <span style="color:var(--muted);font-size:0.9rem">→</span>
+        <span style="color:var(--muted)">→</span>
         <select id="gas-selEnd" onchange="renderPanel('gas')"></select>
       </div>
     </div>
@@ -302,25 +199,16 @@
     </div>
     <div id="gas-app"></div>
   </div>
-
   <div id="panel-elec" class="panel">
     <div class="summary">
-      <div class="scard provider-card">
-        <div class="scard-label">Περίοδος Παρόχου</div>
-        <div class="scard-value" id="elec-sumProvider">—</div>
-        <div class="scard-sub" id="elec-sumProviderLabel">—</div>
-      </div>
-      <div class="scard year-card elec">
-        <div class="scard-label">Σύνολο Έτους</div>
-        <div class="scard-value" id="elec-sumYear">—</div>
-        <div class="scard-sub" id="elec-sumYearLabel">—</div>
-      </div>
+      <div class="scard provider-card elec"><div class="scard-label">Περίοδος Παρόχου</div><div class="scard-value" id="elec-sumProvider">—</div><div class="scard-sub" id="elec-sumProviderLabel">—</div></div>
+      <div class="scard year-card elec"><div class="scard-label">Σύνολο Έτους</div><div class="scard-value" id="elec-sumYear">—</div><div class="scard-sub" id="elec-sumYearLabel">—</div></div>
     </div>
     <div class="period-row">
       <div class="period-label">Περίοδος Παρόχου:</div>
       <div class="period-selects">
         <select id="elec-selStart" onchange="renderPanel('elec')"></select>
-        <span style="color:var(--muted);font-size:0.9rem">→</span>
+        <span style="color:var(--muted)">→</span>
         <select id="elec-selEnd" onchange="renderPanel('elec')"></select>
       </div>
     </div>
@@ -332,38 +220,16 @@
   </div>
 </div>
 
-<!-- FAB -->
 <button class="fab gas" id="fab" onclick="openAddModal()">+</button>
 
-<!-- ADD MODAL -->
 <div class="overlay" id="addOverlay">
   <div class="modal gas-modal">
+    <div class="drag-handle"></div>
     <div class="modal-title gas" id="addModalTitle">🔥 ΝΕΑ ΜΕΤΡΗΣΗ</div>
-    <div class="field">
-      <label>Ημερομηνία</label>
-      <div class="input-wrap gas" id="dateWrap">
-        <input type="date" id="mDate">
-        <span class="ico ico-date"></span>
-      </div>
-    </div>
-    <div class="field">
-      <label>Ώρα (προαιρετικό)</label>
-      <div class="input-wrap gas" id="timeWrap">
-        <input type="time" id="mTime">
-        <span class="ico ico-time"></span>
-      </div>
-    </div>
-    <div class="field">
-      <label id="readingLabel">Ένδειξη Μετρητή (m³)</label>
-      <div class="input-wrap gas" id="readWrap">
-        <input type="number" id="mRead" step="0.001" placeholder="πχ 5004.584" inputmode="decimal">
-        <span class="ico" id="readIco">🔥</span>
-      </div>
-    </div>
-    <div class="checkbox-row">
-      <input type="checkbox" id="mProvider">
-      <label for="mProvider"><span class="prov-dot"></span>Καταμέτρηση Παρόχου</label>
-    </div>
+    <div class="field"><label>Ημερομηνία</label><div class="input-wrap gas" id="dateWrap"><input type="date" id="mDate"><span class="ico ico-date"></span></div></div>
+    <div class="field"><label>Ώρα (προαιρετικό)</label><div class="input-wrap gas" id="timeWrap"><input type="time" id="mTime"><span class="ico ico-time"></span></div></div>
+    <div class="field"><label id="readingLabel">Ένδειξη Μετρητή (m³)</label><div class="input-wrap gas" id="readWrap"><input type="number" id="mRead" step="0.001" placeholder="πχ 5004.584" inputmode="decimal"><span class="ico" id="readIco">🔥</span></div></div>
+    <div class="checkbox-row"><input type="checkbox" id="mProvider"><label for="mProvider"><span class="prov-dot"></span>Καταμέτρηση Παρόχου</label></div>
     <div class="modal-actions">
       <button class="btn-save gas btn" id="btnSave" onclick="addEntry()">Αποθήκευση</button>
       <button class="btn-cancel btn" onclick="closeAdd()">Άκυρο</button>
@@ -371,27 +237,19 @@
   </div>
 </div>
 
-<!-- SETTINGS MODAL -->
 <div class="overlay" id="settingsOverlay">
   <div class="modal settings-modal">
+    <div class="drag-handle"></div>
     <div class="modal-title settings">⚙ ΡΥΘΜΙΣΕΙΣ ΠΑΡΟΧΩΝ</div>
     <div class="settings-section">
-      <div class="settings-section-title">🔥 <span>ΑΕΡΙΟ</span></div>
-      <div class="field"><label>Όνομα Παρόχου</label>
-        <div class="input-wrap"><input type="text" id="s-gas-provider" placeholder="πχ EDA Thess"></div>
-      </div>
-      <div class="field"><label>Αριθμός Μετρητή</label>
-        <div class="input-wrap"><input type="text" id="s-gas-meter" placeholder="πχ 123456789"></div>
-      </div>
+      <div class="settings-section-title">🔥 ΑΕΡΙΟ</div>
+      <div class="field"><label>Όνομα Παρόχου</label><div class="input-wrap"><input type="text" id="s-gas-provider" placeholder="πχ EDA Thess"></div></div>
+      <div class="field"><label>Αριθμός Μετρητή</label><div class="input-wrap"><input type="text" id="s-gas-meter" placeholder="πχ 123456789"></div></div>
     </div>
     <div class="settings-section">
-      <div class="settings-section-title">⚡ <span>ΡΕΥΜΑ</span></div>
-      <div class="field"><label>Όνομα Παρόχου</label>
-        <div class="input-wrap"><input type="text" id="s-elec-provider" placeholder="πχ ΔΕΗ"></div>
-      </div>
-      <div class="field"><label>Αριθμός Μετρητή</label>
-        <div class="input-wrap"><input type="text" id="s-elec-meter" placeholder="πχ 987654321"></div>
-      </div>
+      <div class="settings-section-title">⚡ ΡΕΥΜΑ</div>
+      <div class="field"><label>Όνομα Παρόχου</label><div class="input-wrap"><input type="text" id="s-elec-provider" placeholder="πχ ΔΕΗ"></div></div>
+      <div class="field"><label>Αριθμός Μετρητή</label><div class="input-wrap"><input type="text" id="s-elec-meter" placeholder="πχ 987654321"></div></div>
     </div>
     <div class="modal-actions">
       <button class="btn-save settings btn" onclick="saveSettings()">Αποθήκευση</button>
@@ -400,325 +258,284 @@
   </div>
 </div>
 
+<div class="overlay" id="infoOverlay">
+  <div class="modal info-modal">
+    <div class="drag-handle"></div>
+    <div class="modal-title info">ℹ ΠΛΗΡΟΦΟΡΙΕΣ <span class="info-version">v2.0</span></div>
+    <div class="info-block">
+      <div class="info-block-title">📱 Εφαρμογή</div>
+      <div class="info-desc">Μετρητής κατανάλωσης αερίου (m³) και ρεύματος (kWh). Τα δεδομένα αποθηκεύονται τοπικά στη συσκευή σου.</div>
+    </div>
+    <div class="info-block">
+      <div class="info-block-title">💡 Οδηγίες Χρήσης</div>
+      <div class="info-row"><span>➕ Νέα μέτρηση</span><span>Κουμπί "+" κάτω δεξιά</span></div>
+      <div class="info-row"><span>🗑 Διαγραφή</span><span>✕ → δεύτερο πάτημα</span></div>
+      <div class="info-row"><span>● Παρόχου</span><span>Τσέκαρε "Καταμέτρηση Παρόχου"</span></div>
+      <div class="info-row"><span>📤 Backup</span><span>Export → αποθήκευση JSON</span></div>
+      <div class="info-row"><span>📥 Επαναφορά</span><span>Import → επιλογή JSON</span></div>
+      <div class="info-row"><span>☀️ / 🌙 Theme</span><span>Light / Dark εναλλαγή</span></div>
+    </div>
+    <div class="info-block">
+      <div class="info-block-title">📊 Στατιστικά Μήνα</div>
+      <div class="info-row"><span>Μέσος</span><span>Μέση ημερήσια κατανάλωση</span></div>
+      <div class="info-row"><span>Max</span><span>Μέγιστη ημερήσια κατανάλωση</span></div>
+      <div class="info-row"><span>Min</span><span>Ελάχιστη κατανάλωση (&gt;0)</span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel btn" style="flex:1" onclick="closeInfo()">Κλείσιμο</button>
+    </div>
+  </div>
+</div>
+
 <script>
-const KEY = 'energy_tracker_v1';
-let currentTab = 'gas';
-let pendingDel = null;
+const KEY='energy_tracker_v1';
+let currentTab='gas',pendingDel=null,isDark=true;
+let state={gas:{data:[],nextId:1},elec:{data:[],nextId:1},settings:{gas:{provider:'',meter:''},elec:{provider:'',meter:''}},theme:'dark'};
 
-let state = {
-  gas:  { data: [], nextId: 1 },
-  elec: { data: [], nextId: 1 },
-  settings: {
-    gas:  { provider: '', meter: '' },
-    elec: { provider: '', meter: '' }
-  }
-};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 
-function save() {
-  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {}
-}
-
-function load() {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) { state = JSON.parse(raw); return; }
-  } catch(e) {}
-  state.gas.data = [
-    {id:1,  d:"2026-01-22",t:"08:00",r:4769.458,p:true },
-    {id:2,  d:"2026-02-01",t:"08:00",r:4778.321,p:false},
-    {id:3,  d:"2026-02-02",t:"08:00",r:4787.303,p:false},
-    {id:4,  d:"2026-02-03",t:"08:00",r:4797.748,p:false},
-    {id:5,  d:"2026-02-04",t:"08:00",r:4805.485,p:false},
-    {id:6,  d:"2026-02-05",t:"08:00",r:4812.648,p:false},
-    {id:7,  d:"2026-02-06",t:"08:00",r:4818.796,p:false},
-    {id:8,  d:"2026-02-07",t:"08:00",r:4825.663,p:false},
-    {id:9,  d:"2026-02-08",t:"08:00",r:4830.000,p:false},
-    {id:10, d:"2026-02-09",t:"08:00",r:4835.151,p:false},
-    {id:11, d:"2026-02-10",t:"08:00",r:4844.379,p:false},
-    {id:12, d:"2026-02-11",t:"08:00",r:4853.215,p:false},
-    {id:13, d:"2026-02-12",t:"08:00",r:4861.141,p:false},
-    {id:14, d:"2026-02-13",t:"08:00",r:4866.606,p:false},
-    {id:15, d:"2026-02-14",t:"08:00",r:4872.000,p:false},
-    {id:16, d:"2026-02-15",t:"08:00",r:4878.000,p:false},
-    {id:17, d:"2026-02-16",t:"08:00",r:4884.200,p:false},
-    {id:18, d:"2026-02-17",t:"08:00",r:4890.522,p:false},
-    {id:19, d:"2026-02-18",t:"08:00",r:4897.881,p:false},
-    {id:20, d:"2026-02-19",t:"08:00",r:4907.004,p:false},
-    {id:21, d:"2026-02-20",t:"08:00",r:4912.432,p:false},
-    {id:22, d:"2026-02-21",t:"08:00",r:4918.885,p:true },
-    {id:23, d:"2026-02-28",t:"08:00",r:4966.044,p:false},
-    {id:24, d:"2026-03-01",t:"08:00",r:4970.528,p:false},
-    {id:25, d:"2026-03-02",t:"08:00",r:4980.740,p:false},
-    {id:26, d:"2026-03-03",t:"08:00",r:4987.046,p:false},
-    {id:27, d:"2026-03-04",t:"08:00",r:4991.785,p:false},
-    {id:28, d:"2026-03-05",t:"08:00",r:4996.610,p:false},
-    {id:29, d:"2026-03-06",t:"08:00",r:5001.717,p:false},
-    {id:30, d:"2026-03-07",t:"11:00",r:5004.584,p:true },
+function load(){
+  try{const raw=localStorage.getItem(KEY);if(raw){state=JSON.parse(raw);applyTheme(state.theme||'dark');return;}}catch(e){}
+  state.gas.data=[
+    {id:1,d:"2026-01-22",t:"08:00",r:4769.458,p:true},{id:2,d:"2026-02-01",t:"08:00",r:4778.321,p:false},
+    {id:3,d:"2026-02-02",t:"08:00",r:4787.303,p:false},{id:4,d:"2026-02-03",t:"08:00",r:4797.748,p:false},
+    {id:5,d:"2026-02-04",t:"08:00",r:4805.485,p:false},{id:6,d:"2026-02-05",t:"08:00",r:4812.648,p:false},
+    {id:7,d:"2026-02-06",t:"08:00",r:4818.796,p:false},{id:8,d:"2026-02-07",t:"08:00",r:4825.663,p:false},
+    {id:9,d:"2026-02-08",t:"08:00",r:4830.000,p:false},{id:10,d:"2026-02-09",t:"08:00",r:4835.151,p:false},
+    {id:11,d:"2026-02-10",t:"08:00",r:4844.379,p:false},{id:12,d:"2026-02-11",t:"08:00",r:4853.215,p:false},
+    {id:13,d:"2026-02-12",t:"08:00",r:4861.141,p:false},{id:14,d:"2026-02-13",t:"08:00",r:4866.606,p:false},
+    {id:15,d:"2026-02-14",t:"08:00",r:4872.000,p:false},{id:16,d:"2026-02-15",t:"08:00",r:4878.000,p:false},
+    {id:17,d:"2026-02-16",t:"08:00",r:4884.200,p:false},{id:18,d:"2026-02-17",t:"08:00",r:4890.522,p:false},
+    {id:19,d:"2026-02-18",t:"08:00",r:4897.881,p:false},{id:20,d:"2026-02-19",t:"08:00",r:4907.004,p:false},
+    {id:21,d:"2026-02-20",t:"08:00",r:4912.432,p:false},{id:22,d:"2026-02-21",t:"08:00",r:4918.885,p:true},
+    {id:23,d:"2026-02-28",t:"08:00",r:4966.044,p:false},{id:24,d:"2026-03-01",t:"08:00",r:4970.528,p:false},
+    {id:25,d:"2026-03-02",t:"08:00",r:4980.740,p:false},{id:26,d:"2026-03-03",t:"08:00",r:4987.046,p:false},
+    {id:27,d:"2026-03-04",t:"08:00",r:4991.785,p:false},{id:28,d:"2026-03-05",t:"08:00",r:4996.610,p:false},
+    {id:29,d:"2026-03-06",t:"08:00",r:5001.717,p:false},{id:30,d:"2026-03-07",t:"11:00",r:5004.584,p:true},
   ];
-  state.gas.nextId = 31;
-  state.settings.gas.provider = 'EDA Thess';
-  save();
+  state.gas.nextId=31; state.settings.gas.provider='EDA Thess'; save();
 }
 
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(`.tab.${tab}`).classList.add('active');
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+function applyTheme(theme){
+  isDark=theme==='dark';
+  document.documentElement.setAttribute('data-theme',isDark?'dark':'light');
+  document.getElementById('themeBtn').textContent=isDark?'☀️ Light':'🌙 Dark';
+  state.theme=theme;
+}
+function toggleTheme(){applyTheme(isDark?'light':'dark');save();}
+
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.tab.'+tab).classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
-  const fab = document.getElementById('fab');
-  fab.className = 'fab ' + tab;
+  document.getElementById('fab').className='fab '+tab;
   renderPanel(tab);
 }
 
-function openSettings() {
-  document.getElementById('s-gas-provider').value  = state.settings.gas.provider  || '';
-  document.getElementById('s-gas-meter').value     = state.settings.gas.meter     || '';
-  document.getElementById('s-elec-provider').value = state.settings.elec.provider || '';
-  document.getElementById('s-elec-meter').value    = state.settings.elec.meter    || '';
+function openSettings(){
+  document.getElementById('s-gas-provider').value=state.settings.gas.provider||'';
+  document.getElementById('s-gas-meter').value=state.settings.gas.meter||'';
+  document.getElementById('s-elec-provider').value=state.settings.elec.provider||'';
+  document.getElementById('s-elec-meter').value=state.settings.elec.meter||'';
   document.getElementById('settingsOverlay').classList.add('open');
 }
-function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
-function saveSettings() {
-  state.settings.gas.provider  = document.getElementById('s-gas-provider').value.trim();
-  state.settings.gas.meter     = document.getElementById('s-gas-meter').value.trim();
-  state.settings.elec.provider = document.getElementById('s-elec-provider').value.trim();
-  state.settings.elec.meter    = document.getElementById('s-elec-meter').value.trim();
-  save(); closeSettings();
+function closeSettings(){document.getElementById('settingsOverlay').classList.remove('open');}
+function saveSettings(){
+  state.settings.gas.provider=document.getElementById('s-gas-provider').value.trim();
+  state.settings.gas.meter=document.getElementById('s-gas-meter').value.trim();
+  state.settings.elec.provider=document.getElementById('s-elec-provider').value.trim();
+  state.settings.elec.meter=document.getElementById('s-elec-meter').value.trim();
+  save();closeSettings();
 }
+function openInfo(){document.getElementById('infoOverlay').classList.add('open');}
+function closeInfo(){document.getElementById('infoOverlay').classList.remove('open');}
 
-function openAddModal() {
-  const tab = currentTab;
-  const now = new Date(), pad = n => String(n).padStart(2,'0');
-  document.getElementById('mDate').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-  document.getElementById('mTime').value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  document.getElementById('mRead').value = '';
-  document.getElementById('mProvider').checked = false;
-
-  const isGas = tab === 'gas';
-  document.getElementById('addModalTitle').className = 'modal-title ' + tab;
-  document.getElementById('addModalTitle').textContent = isGas ? '🔥 ΝΕΑ ΜΕΤΡΗΣΗ' : '⚡ ΝΕΑ ΜΕΤΡΗΣΗ';
-  document.getElementById('dateWrap').className = 'input-wrap ' + tab;
-  document.getElementById('timeWrap').className = 'input-wrap ' + tab;
-  document.getElementById('readWrap').className = 'input-wrap ' + tab;
-  document.getElementById('readingLabel').textContent = isGas ? 'Ένδειξη Μετρητή (m³)' : 'Ένδειξη Μετρητή (kWh)';
-  document.getElementById('readIco').textContent = isGas ? '🔥' : '⚡';
-  document.getElementById('mRead').placeholder = isGas ? 'πχ 5004.584' : 'πχ 12345.6';
-  document.getElementById('btnSave').className = 'btn-save btn ' + tab;
-  document.querySelector('#addOverlay .modal').className = 'modal ' + (tab==='gas'?'gas-modal':'elec-modal');
+function openAddModal(){
+  const tab=currentTab;
+  const now=new Date(),pad=n=>String(n).padStart(2,'0');
+  document.getElementById('mDate').value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  document.getElementById('mTime').value=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  document.getElementById('mRead').value='';
+  document.getElementById('mProvider').checked=false;
+  const isGas=tab==='gas';
+  document.getElementById('addModalTitle').className='modal-title '+tab;
+  document.getElementById('addModalTitle').textContent=isGas?'🔥 ΝΕΑ ΜΕΤΡΗΣΗ':'⚡ ΝΕΑ ΜΕΤΡΗΣΗ';
+  ['dateWrap','timeWrap','readWrap'].forEach(id=>document.getElementById(id).className='input-wrap '+tab);
+  document.getElementById('readingLabel').textContent=isGas?'Ένδειξη Μετρητή (m³)':'Ένδειξη Μετρητή (kWh)';
+  document.getElementById('readIco').textContent=isGas?'🔥':'⚡';
+  document.getElementById('mRead').placeholder=isGas?'πχ 5004.584':'πχ 12345.6';
+  document.getElementById('btnSave').className='btn-save btn '+tab;
+  document.querySelector('#addOverlay .modal').className='modal '+(tab==='gas'?'gas-modal':'elec-modal');
   document.getElementById('addOverlay').classList.add('open');
-  setTimeout(() => document.getElementById('mRead').focus(), 300);
+  setTimeout(()=>document.getElementById('mRead').focus(),300);
 }
-function closeAdd() { document.getElementById('addOverlay').classList.remove('open'); }
+function closeAdd(){document.getElementById('addOverlay').classList.remove('open');}
 
-document.getElementById('addOverlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('addOverlay')) closeAdd();
-});
-document.getElementById('settingsOverlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('settingsOverlay')) closeSettings();
+['addOverlay','settingsOverlay','infoOverlay'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target.id===id){closeAdd();closeSettings();closeInfo();}});
 });
 
-function addEntry() {
-  const tab = currentTab;
-  const d = document.getElementById('mDate').value;
-  const t = document.getElementById('mTime').value || '08:00';
-  const r = parseFloat(document.getElementById('mRead').value.replace(',','.'));
-  const p = document.getElementById('mProvider').checked;
-  if (!d || isNaN(r)) { document.getElementById('mRead').focus(); return; }
-  state[tab].data.push({ id: state[tab].nextId++, d, t, r, p });
-  save(); closeAdd(); renderPanel(tab);
+function addEntry(){
+  const tab=currentTab;
+  const d=document.getElementById('mDate').value;
+  const t=document.getElementById('mTime').value||'08:00';
+  const r=parseFloat(document.getElementById('mRead').value.replace(',','.'));
+  const p=document.getElementById('mProvider').checked;
+  if(!d||isNaN(r)){document.getElementById('mRead').focus();return;}
+  state[tab].data.push({id:state[tab].nextId++,d,t,r,p});
+  save();closeAdd();renderPanel(tab);
 }
 
-function delEntry(tab, id) {
-  const key = tab+'_'+id;
-  if (pendingDel === key) {
-    state[tab].data = state[tab].data.filter(x => x.id !== id);
-    pendingDel = null; save(); renderPanel(tab);
-  } else {
-    pendingDel = key;
-    const btn = document.querySelector('[data-del="'+key+'"]');
-    if (btn) { btn.textContent='✓'; btn.style.color='var(--danger)'; btn.style.background='rgba(239,68,68,0.15)'; }
-    setTimeout(() => { if(pendingDel===key){pendingDel=null; renderPanel(tab);} }, 2000);
+function delEntry(tab,id){
+  const key=tab+'_'+id;
+  if(pendingDel===key){
+    const rowEl=document.querySelector('#'+tab+'-app .months-row');
+    const savedScroll=rowEl?rowEl.scrollLeft:0;
+    state[tab].data=state[tab].data.filter(x=>x.id!==id);
+    pendingDel=null;save();renderPanel(tab);
+    const newRow=document.querySelector('#'+tab+'-app .months-row');
+    if(newRow)newRow.scrollLeft=savedScroll;
+  }else{
+    pendingDel=key;
+    const btn=document.querySelector('[data-del="'+key+'"]');
+    if(btn){btn.textContent='✓';btn.style.color='var(--danger)';btn.style.background='rgba(239,68,68,0.15)';}
+    setTimeout(()=>{if(pendingDel===key){pendingDel=null;renderPanel(tab);}},2000);
   }
 }
 
-function resetTab(tab) {
-  const key = 'RESET_'+tab;
-  const attr = tab==='gas' ? '[data-reset-gas]' : '[data-reset-elec]';
-  const label = '✕ Reset';
-  if (pendingDel !== key) {
-    pendingDel = key;
-    const btn = document.querySelector(attr);
-    if (btn) { btn.textContent='✓ Σίγουρα;'; btn.style.color='var(--danger)'; }
-    setTimeout(() => {
-      if(pendingDel===key){ pendingDel=null; const b=document.querySelector(attr); if(b){b.textContent=label;b.style.color='';} }
-    }, 3000);
+function resetTab(tab){
+  const key='RESET_'+tab;
+  const attr=tab==='gas'?'[data-reset-gas]':'[data-reset-elec]';
+  if(pendingDel!==key){
+    pendingDel=key;
+    const btn=document.querySelector(attr);
+    if(btn){btn.textContent='✓ Σίγουρα;';btn.style.color='var(--danger)';}
+    setTimeout(()=>{if(pendingDel===key){pendingDel=null;const b=document.querySelector(attr);if(b){b.textContent='✕ Reset';b.style.color='';};}},3000);
     return;
   }
-  pendingDel = null;
-  state[tab].data=[]; state[tab].nextId=1;
-  save(); renderPanel(tab);
+  pendingDel=null;state[tab].data=[];state[tab].nextId=1;save();renderPanel(tab);
 }
 
-function exportData() {
-  const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'energy_tracker_backup.json'; a.click();
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='energy_tracker_backup.json';a.click();
 }
-function importData(e) {
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      state = JSON.parse(ev.target.result);
-      save(); renderPanel('gas'); renderPanel('elec');
-    } catch { alert('Σφάλμα αρχείου JSON.'); }
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{state=JSON.parse(ev.target.result);save();renderPanel('gas');renderPanel('elec');applyTheme(state.theme||'dark');}
+    catch{alert('Σφάλμα αρχείου JSON.');}
   };
-  reader.readAsText(file); e.target.value='';
+  reader.readAsText(file);e.target.value='';
 }
 
-const showTime = { gas: false, elec: false };
-function toggleTime(tab) {
-  showTime[tab] = !showTime[tab];
-  const btn = document.getElementById('toggleTime-'+tab);
-  if (showTime[tab]) {
-    btn.textContent = '🕐 Απόκρυψη Ώρας';
-    btn.style.borderColor = 'var(--prov)';
-    btn.style.color = 'var(--prov)';
-  } else {
-    btn.textContent = '🕐 Ώρα';
-    btn.style.borderColor = '';
-    btn.style.color = '';
-  }
+const showTime={gas:false,elec:false};
+function toggleTime(tab){
+  showTime[tab]=!showTime[tab];
+  const btn=document.getElementById('toggleTime-'+tab);
+  btn.textContent=showTime[tab]?'🕐 Κρύψε':'🕐 Ώρα';
+  btn.classList.toggle('active',showTime[tab]);
   renderPanel(tab);
 }
 
-function renderPanel(tab) {
-  const unit = tab === 'gas' ? 'm³' : 'kWh';
-  const sorted = [...state[tab].data].sort((a,b) =>
-    new Date(a.d+'T'+(a.t||'08:00')) - new Date(b.d+'T'+(b.t||'08:00'))
-  );
-
-  const selStart = document.getElementById(tab+'-selStart');
-  const selEnd   = document.getElementById(tab+'-selEnd');
-  const oldStart = selStart.value, oldEnd = selEnd.value;
-  selStart.innerHTML = ''; selEnd.innerHTML = '';
-
-  sorted.forEach(item => {
-    const dt = new Date(item.d);
-    const label = dt.getDate()+'/'+(dt.getMonth()+1)+(item.p?' ●':'');
-    const val = item.d+'T'+(item.t||'08:00');
-    [selStart,selEnd].forEach(s => {
-      const o = document.createElement('option');
-      o.value=val; o.textContent=label; s.appendChild(o);
-    });
+function renderPanel(tab){
+  const unit=tab==='gas'?'m³':'kWh';
+  const sorted=[...state[tab].data].sort((a,b)=>new Date(a.d+'T'+(a.t||'08:00'))-new Date(b.d+'T'+(b.t||'08:00')));
+  const selStart=document.getElementById(tab+'-selStart');
+  const selEnd=document.getElementById(tab+'-selEnd');
+  const oldStart=selStart.value,oldEnd=selEnd.value;
+  selStart.innerHTML='';selEnd.innerHTML='';
+  sorted.forEach(item=>{
+    const dt=new Date(item.d);
+    const label=dt.getDate()+'/'+(dt.getMonth()+1)+(item.p?' ●':'');
+    const val=item.d+'T'+(item.t||'08:00');
+    [selStart,selEnd].forEach(s=>{const o=document.createElement('option');o.value=val;o.textContent=label;s.appendChild(o);});
   });
-
-  const provDates = sorted.filter(x=>x.p);
-  selStart.value = (oldStart && [...selStart.options].some(o=>o.value===oldStart)) ? oldStart
-    : (provDates.length>=2 ? provDates[provDates.length-2].d+'T'+(provDates[provDates.length-2].t||'08:00') : selStart.options[0]?.value||'');
-  selEnd.value = (oldEnd && [...selEnd.options].some(o=>o.value===oldEnd)) ? oldEnd
-    : (provDates.length>=1 ? provDates[provDates.length-1].d+'T'+(provDates[provDates.length-1].t||'08:00') : selEnd.options[selEnd.options.length-1]?.value||'');
-
-  const startDT = new Date(selStart.value);
-  const endDT   = new Date(selEnd.value);
-
-  const withDiff = sorted.map((item,idx) => ({
-    ...item, diff: +(item.r - (idx>0?sorted[idx-1].r:item.r)).toFixed(3)
-  }));
-
-  const years = {};
-  withDiff.forEach(item => {
-    const dt = new Date(item.d);
-    const yr = dt.getFullYear();
-    const mk = `${yr}-${String(dt.getMonth()+1).padStart(2,'0')}`;
-    const mlabel = dt.toLocaleString('el-GR',{month:'long'});
-    if(!years[yr]) years[yr]={};
-    if(!years[yr][mk]) years[yr][mk]={label:mlabel,items:[]};
+  const provDates=sorted.filter(x=>x.p);
+  selStart.value=(oldStart&&[...selStart.options].some(o=>o.value===oldStart))?oldStart
+    :(provDates.length>=2?provDates[provDates.length-2].d+'T'+(provDates[provDates.length-2].t||'08:00'):selStart.options[0]?.value||'');
+  selEnd.value=(oldEnd&&[...selEnd.options].some(o=>o.value===oldEnd))?oldEnd
+    :(provDates.length>=1?provDates[provDates.length-1].d+'T'+(provDates[provDates.length-1].t||'08:00'):selEnd.options[selEnd.options.length-1]?.value||'');
+  const startDT=new Date(selStart.value),endDT=new Date(selEnd.value);
+  const withDiff=sorted.map((item,idx)=>({...item,diff:+(item.r-(idx>0?sorted[idx-1].r:item.r)).toFixed(3)}));
+  const years={};
+  withDiff.forEach(item=>{
+    const dt=new Date(item.d),yr=dt.getFullYear();
+    const mk=`${yr}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+    const mlabel=dt.toLocaleString('el-GR',{month:'long'});
+    if(!years[yr])years[yr]={};
+    if(!years[yr][mk])years[yr][mk]={label:mlabel,items:[]};
     years[yr][mk].items.push(item);
   });
-
-  const now = new Date(), curYr = now.getFullYear();
-  const beforeEnd   = withDiff.filter(x => new Date(x.d+'T'+(x.t||'08:00')) <= endDT);
-  const beforeStart = withDiff.filter(x => new Date(x.d+'T'+(x.t||'08:00')) <= startDT);
-  const sumProvider = (beforeEnd.length && beforeStart.length)
-    ? +(beforeEnd[beforeEnd.length-1].r - beforeStart[beforeStart.length-1].r).toFixed(3) : 0;
-  const curYearItems = withDiff.filter(x => new Date(x.d).getFullYear()===curYr);
-  const sumYear = curYearItems.length>1
-    ? +(curYearItems[curYearItems.length-1].r - curYearItems[0].r).toFixed(3) : 0;
-
-  document.getElementById(tab+'-sumProvider').textContent = sumProvider.toFixed(3)+' '+unit;
-  const ps = selStart.options[selStart.selectedIndex]?.textContent.replace(' ●','')||'—';
-  const pe = selEnd.options[selEnd.selectedIndex]?.textContent.replace(' ●','')||'—';
-  document.getElementById(tab+'-sumProviderLabel').textContent = ps+' → '+pe;
-  document.getElementById(tab+'-sumYear').textContent = sumYear.toFixed(3)+' '+unit;
-  document.getElementById(tab+'-sumYearLabel').textContent = 'έτος '+curYr;
-
-  const app = document.getElementById(tab+'-app');
-  if (sorted.length===0) {
-    app.innerHTML='<div class="empty">Δεν υπάρχουν μετρήσεις.<br>Πάτα + για να προσθέσεις.</div>';
-    return;
-  }
-
-  const yearKeys = Object.keys(years).sort((a,b)=>b-a);
-  app.innerHTML = yearKeys.map(yr => {
-    const monthKeys = Object.keys(years[yr]).sort();
-    const yrItems = Object.values(years[yr]).flatMap(m=>m.items).sort((a,b)=>new Date(a.d)-new Date(b.d));
-    const yearTotal = yrItems.length>1 ? (yrItems[yrItems.length-1].r-yrItems[0].r).toFixed(3) : '0.000';
-
-    const monthsHTML = '<div class="months-row">' +
-      monthKeys.map(mk => {
-        const {label,items} = years[yr][mk];
-        const mTotal = items.length>1 ? (items[items.length-1].r-items[0].r).toFixed(3) : items[0]?.diff.toFixed(3)||'0.000';
-        const rows = items.map(item => {
-          const dt = new Date(item.d);
-          return `<tr class="${item.p?'prov-row':''}">
-            <td class="td-date">${item.p?'<span class="prov-dot"></span>':''}${dt.getDate()}/${dt.getMonth()+1}</td>
-            ${showTime[tab]?`<td style="color:var(--prov);font-size:0.75rem">${item.t||'—'}</td>`:''}
-            <td>${item.r.toFixed(3)}</td>
-            <td class="td-diff ${tab} ${item.diff<=0?'zero':''}">${item.diff>0?item.diff.toFixed(3):'—'}</td>
-            <td><button class="del-btn" data-del="${tab}_${item.id}" onclick="delEntry('${tab}',${item.id})">✕</button></td>
-          </tr>`;
-        }).join('');
-        return `<div class="month-card">
-          <div class="month-head">
-            <div class="month-name">${label}</div>
-            <div class="month-total">${mTotal} ${unit}</div>
-          </div>
-          <table>
-            <thead><tr><th>Ημ.</th>${showTime[tab]?'<th style="color:var(--prov)">Ώρα</th>':''}<th>${unit}</th><th>Διαφ.</th><th></th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>`;
-      }).join('') + '</div>';
-
-    return `<div class="year-section">
-      <div class="year-header">
-        <div class="year-title ${tab}">${yr}</div>
-        <div class="year-total">${yearTotal} ${unit} σύνολο</div>
-        <div class="year-line"></div>
-      </div>
+  const now=new Date(),curYr=now.getFullYear();
+  const beforeEnd=withDiff.filter(x=>new Date(x.d+'T'+(x.t||'08:00'))<=endDT);
+  const beforeStart=withDiff.filter(x=>new Date(x.d+'T'+(x.t||'08:00'))<=startDT);
+  const sumProvider=(beforeEnd.length&&beforeStart.length)?+(beforeEnd[beforeEnd.length-1].r-beforeStart[beforeStart.length-1].r).toFixed(3):0;
+  const curYearItems=withDiff.filter(x=>new Date(x.d).getFullYear()===curYr);
+  const sumYear=curYearItems.length>1?+(curYearItems[curYearItems.length-1].r-curYearItems[0].r).toFixed(3):0;
+  document.getElementById(tab+'-sumProvider').textContent=sumProvider.toFixed(3)+' '+unit;
+  const ps=selStart.options[selStart.selectedIndex]?.textContent.replace(' ●','')||'—';
+  const pe=selEnd.options[selEnd.selectedIndex]?.textContent.replace(' ●','')||'—';
+  document.getElementById(tab+'-sumProviderLabel').textContent=ps+' → '+pe;
+  document.getElementById(tab+'-sumYear').textContent=sumYear.toFixed(3)+' '+unit;
+  document.getElementById(tab+'-sumYearLabel').textContent='έτος '+curYr;
+  const app=document.getElementById(tab+'-app');
+  if(sorted.length===0){app.innerHTML='<div class="empty">Δεν υπάρχουν μετρήσεις.<br>Πάτα + για να προσθέσεις.</div>';return;}
+  const yearKeys=Object.keys(years).sort((a,b)=>b-a);
+  app.innerHTML=yearKeys.map(yr=>{
+    const monthKeys=Object.keys(years[yr]).sort();
+    const yrItems=Object.values(years[yr]).flatMap(m=>m.items).sort((a,b)=>new Date(a.d)-new Date(b.d));
+    const yearTotal=yrItems.length>1?(yrItems[yrItems.length-1].r-yrItems[0].r).toFixed(3):'0.000';
+    const monthsHTML='<div class="months-row">'+monthKeys.map(mk=>{
+      const{label,items}=years[yr][mk];
+      const diffs=items.map(x=>x.diff).filter(d=>d>0);
+      const mTotal=items.length>1?(items[items.length-1].r-items[0].r).toFixed(3):(items[0]?.diff||0).toFixed(3);
+      const avg=diffs.length?(diffs.reduce((a,b)=>a+b,0)/diffs.length).toFixed(2):'—';
+      const max=diffs.length?Math.max(...diffs).toFixed(3):'—';
+      const min=diffs.length?Math.min(...diffs).toFixed(3):'—';
+      const rows=items.map(item=>{
+        const dt=new Date(item.d);
+        return`<tr class="${item.p?'prov-row':''}">
+          <td class="td-date">${item.p?'<span class="prov-dot"></span>':''}${dt.getDate()}/${dt.getMonth()+1}</td>
+          ${showTime[tab]?`<td style="color:var(--prov);font-size:0.72rem">${item.t||'—'}</td>`:''}
+          <td>${item.r.toFixed(3)}</td>
+          <td class="td-diff ${tab} ${item.diff<=0?'zero':''}">${item.diff>0?item.diff.toFixed(3):'—'}</td>
+          <td><button class="del-btn" data-del="${tab}_${item.id}" onclick="delEntry('${tab}',${item.id})">✕</button></td>
+        </tr>`;
+      }).join('');
+      return`<div class="month-card">
+        <div class="month-head"><div class="month-name">${label}</div><div class="month-total">${mTotal} ${unit}</div></div>
+        <div class="month-stats">
+          <div class="stat-item"><div class="stat-label">Μέσος</div><div class="stat-value avg">${avg}</div></div>
+          <div class="stat-item"><div class="stat-label">Max</div><div class="stat-value ${tab}">${max}</div></div>
+          <div class="stat-item"><div class="stat-label">Min</div><div class="stat-value ${tab}">${min}</div></div>
+        </div>
+        <table>
+          <thead><tr><th>Ημ.</th>${showTime[tab]?'<th style="color:var(--prov)">Ώρα</th>':''}<th>${unit}</th><th>Διαφ.</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }).join('')+'</div>';
+    return`<div class="year-section">
+      <div class="year-header"><div class="year-title ${tab}">${yr}</div><div class="year-total ${tab}">${yearTotal} ${unit} σύνολο</div><div class="year-line"></div></div>
       ${monthsHTML}
     </div>`;
   }).join('');
 }
 
-document.addEventListener('keydown', e => {
-  if (e.key==='Escape') { closeAdd(); closeSettings(); }
-  if (e.key==='Enter' && document.getElementById('addOverlay').classList.contains('open')) addEntry();
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeAdd();closeSettings();closeInfo();}
+  if(e.key==='Enter'&&document.getElementById('addOverlay').classList.contains('open'))addEntry();
 });
 
-load();
-renderPanel('gas');
-renderPanel('elec');
+load();renderPanel('gas');renderPanel('elec');
 </script>
-
 <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
-}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
 </script>
 </body>
 </html>
