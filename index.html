@@ -36,9 +36,69 @@
   .tabs{display:flex;border-bottom:1px solid var(--border);}
   .tab{font-family:var(--sans);font-size:1rem;font-weight:600;padding:17px 0;cursor:pointer;border-bottom:3px solid transparent;color:var(--muted);transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:-1px;flex:1;}
   .tab:hover{color:var(--text);}
-  .tab.active.gas{color:var(--gas);border-bottom-color:var(--gas);}
-  .tab.active.elec{color:var(--elec);border-bottom-color:var(--elec);}
+  .tab.active.gas{border-bottom-color:#f97316;}
+  .tab.active.elec{border-bottom-color:var(--elec);}
   .tab-bolt{color:var(--elec);}
+
+  @keyframes fire-text {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes fire-flicker {
+    0%,100% { text-shadow: 0 0 8px rgba(249,115,22,0.6), 0 0 20px rgba(239,68,68,0.4); }
+    25%      { text-shadow: 0 0 12px rgba(251,191,36,0.8), 0 0 30px rgba(249,115,22,0.5); }
+    50%      { text-shadow: 0 0 6px rgba(239,68,68,0.5), 0 0 15px rgba(220,38,38,0.3); }
+    75%      { text-shadow: 0 0 14px rgba(251,191,36,0.9), 0 0 25px rgba(249,115,22,0.6); }
+  }
+  @keyframes lightning-flash {
+    0%,78%,100% { opacity:1; text-shadow: 0 0 8px rgba(56,189,248,0.7), 0 0 20px rgba(56,189,248,0.4); }
+    80%          { opacity:0.15; }
+    82%          { opacity:1; text-shadow: 0 0 30px #fff, 0 0 50px #38bdf8; }
+    84%          { opacity:0.3; }
+    86%          { opacity:1; text-shadow: 0 0 8px rgba(56,189,248,0.7); }
+  }
+
+  .tab.active.gas .tab-fire-text {
+    background: linear-gradient(90deg, #dc2626, #f97316, #fbbf24, #f97316, #dc2626);
+    background-size: 200% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: fire-text 2s ease infinite;
+  }
+  .tab.active.gas .tab-fire-icon {
+    animation: fire-flicker 1.5s ease-in-out infinite;
+    display: inline-block;
+  }
+  .tab.active.elec .tab-bolt {
+    animation: lightning-flash 4s ease-in-out infinite;
+    color: #38bdf8 !important;
+  }
+  .tab.active.elec .tab-elec-text {
+    color: #38bdf8 !important;
+    animation: lightning-flash 4s ease-in-out infinite;
+  }
+
+  /* Inactive tabs — animάρουν κι αυτά! */
+  .tab.elec:not(.active) .tab-bolt {
+    animation: lightning-flash 3s ease-in-out infinite;
+    color: #38bdf8 !important;
+  }
+  .tab.elec:not(.active) .tab-elec-text {
+    color: #38bdf8 !important;
+    animation: lightning-flash 3s ease-in-out infinite;
+  }
+  .tab.gas:not(.active) .tab-fire-text {
+    background: linear-gradient(90deg, #dc2626, #f97316, #fbbf24, #f97316, #dc2626);
+    background-size: 200% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: fire-text 2s ease infinite;
+    opacity: 0.6;
+  }
+  .tab.gas:not(.active) .tab-fire-icon {
+    animation: fire-flicker 1.5s ease-in-out infinite;
+    display: inline-block;
+    opacity: 0.6;
+  }
   .content{width:100%;padding:16px 16px 0;}
   .panel{display:none;}.panel.active{display:block;}
   .summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
@@ -199,8 +259,8 @@
 </div>
 
 <div class="tabs">
-  <div class="tab active gas" onclick="switchTab('gas')">🔥 ΑΕΡΙΟ</div>
-  <div class="tab elec" onclick="switchTab('elec')"><span class="tab-bolt">&#9889;</span> ΡΕΥΜΑ</div>
+  <div class="tab active gas" onclick="switchTab('gas')"><span class="tab-fire-icon">🔥</span><span class="tab-fire-text">ΑΕΡΙΟ</span></div>
+  <div class="tab elec" onclick="switchTab('elec')"><span class="tab-bolt">&#9889;</span><span class="tab-elec-text"> ΡΕΥΜΑ</span></div>
 </div>
 
 <div class="content">
