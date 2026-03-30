@@ -155,6 +155,8 @@
   .stat-value.gas{color:var(--gas);}.stat-value.elec{color:var(--elec);}.stat-value.avg.gas{color:var(--gas);}.stat-value.avg.elec{color:var(--elec);}.stat-value.avg{color:var(--muted);}
   table{width:100%;border-collapse:collapse;}
   thead tr{border-bottom:1px solid var(--border);}
+  th:last-child,td:last-child{position:sticky;right:0;background:var(--surface);z-index:1;}
+  thead th:last-child{background:var(--surface2);}
   th{font-family:var(--mono);font-size:0.6rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;padding:8px 12px;text-align:left;font-weight:400;}
   tbody tr{border-bottom:1px solid rgba(42,47,74,0.4);transition:background 0.1s;}
   [data-theme="light"] tbody tr{border-bottom:1px solid rgba(203,213,225,0.5);}
@@ -351,10 +353,45 @@
       <div class="chart-canvas-wrap"><canvas class="chart" id="customChart" height="200"></canvas></div>
     </div>
 
+    <!-- Σύγκριση περιόδων -->
+    <div class="chart-section">
+      <div class="chart-section-title">
+        🔀 Σύγκριση Περιόδων
+        <div class="chart-tabs" style="margin-bottom:0">
+          <span class="chart-tab active gas" onclick="setCompareTab('gas')" id="compareTab-gas">🔥 Αέριο</span>
+          <span class="chart-tab" onclick="setCompareTab('elec')" id="compareTab-elec">⚡ Ρεύμα</span>
+        </div>
+      </div>
+      <div class="custom-range" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+        <div><label>Από (Α)</label><select id="compareStart1" onchange="drawCompareChart()"></select></div>
+        <div><label>Έως (Α)</label><select id="compareEnd1" onchange="drawCompareChart()"></select></div>
+        <div><label>Από (Β)</label><select id="compareStart2" onchange="drawCompareChart()"></select></div>
+        <div><label>Έως (Β)</label><select id="compareEnd2" onchange="drawCompareChart()"></select></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap;">
+        <div id="compareLegend1" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;display:flex;align-items:center;gap:6px;"></div>
+        <div id="compareLegend2" style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;display:flex;align-items:center;gap:6px;"></div>
+      </div>
+      <div class="chart-canvas-wrap"><canvas class="chart" id="compareChart" height="200"></canvas></div>
+    </div>
+
   </div>
 </div>
 
 <button class="fab gas" id="fab" onclick="openAddModal()">+</button>
+  <div class="modal gas-modal">
+    <div class="drag-handle"></div>
+    <div class="modal-title gas" id="addModalTitle">🔥 ΝΕΑ ΜΕΤΡΗΣΗ</div>
+    <div class="field"><label>Ημερομηνία</label><div class="input-wrap gas" id="dateWrap"><input type="date" id="mDate"><span class="ico ico-date"></span></div></div>
+    <div class="field"><label>Ώρα (προαιρετικό)</label><div class="input-wrap gas" id="timeWrap"><input type="time" id="mTime"><span class="ico ico-time"></span></div></div>
+    <div class="field"><label id="readingLabel">Ένδειξη Μετρητή (m³)</label><div class="input-wrap gas" id="readWrap"><input type="number" id="mRead" step="0.001" placeholder="πχ 5004.584" inputmode="decimal"><span class="ico" id="readIco">🔥</span></div></div>
+    <div class="checkbox-row"><input type="checkbox" id="mProvider"><label for="mProvider"><span class="prov-dot"></span>Καταμέτρηση Παρόχου</label></div>
+    <div class="modal-actions">
+      <button class="btn-save gas btn" id="btnSave" onclick="addEntry()">Αποθήκευση</button>
+      <button class="btn-cancel btn" onclick="closeAdd()">Άκυρο</button>
+    </div>
+  </div>
+</div>
 
 <div class="overlay" id="addOverlay">
   <div class="modal gas-modal">
@@ -372,9 +409,6 @@
 </div>
 
 <div class="overlay" id="pasteOverlay">
-  <div class="modal settings-modal" style="max-height:90vh;overflow-y:auto;">
-    <div class="drag-handle"></div>
-    <div class="modal-title settings" id="pasteTitle">📋 ΕΠΙΚΟΛΛΗΣΗ EXCEL</div>
     <div class="field">
       <label>Επικόλλησε 2 στήλες από Excel (Ημερομηνία + Ένδειξη)</label>
       <textarea id="pasteArea" style="width:100%;height:160px;font-family:var(--mono);font-size:0.85rem;background:var(--input-bg);color:var(--modal-text);border:1.5px solid var(--modal-border);border-radius:10px;padding:12px;outline:none;resize:none;" placeholder="πχ:&#10;1/1	4769.458&#10;2/1	4778.321&#10;3/1	4787.303"></textarea>
@@ -505,7 +539,7 @@ function applyTheme(theme){
 function toggleTheme(){
   applyTheme(isDark?'light':'dark');save();
   if(document.getElementById('chartsOverlay').classList.contains('open')){
-    setTimeout(()=>{drawBarChart();drawLineChart();drawCustomChart();},50);
+    setTimeout(()=>{drawBarChart();drawLineChart();drawCustomChart();drawCompareChart();},50);
   }
 }
 
@@ -747,14 +781,14 @@ function getDim(tab){return tab==='gas'?getCSSVar('--gas-dim'):getCSSVar('--elec
 
 function openCharts(){
   document.getElementById('chartsOverlay').classList.add('open');
-  // Ξεκίνα από το τρέχον tab
-  barTab=currentTab; lineTab=currentTab; customTab=currentTab;
+  barTab=currentTab; lineTab=currentTab; customTab=currentTab; compareTab=currentTab;
   ['gas','elec'].forEach(t=>{
     document.getElementById('barTab-'+t).className='chart-tab'+(t===currentTab?' active '+currentTab:'');
     document.getElementById('lineTab-'+t).className='chart-tab'+(t===currentTab?' active '+currentTab:'');
     document.getElementById('customTab-'+t).className='chart-tab'+(t===currentTab?' active '+currentTab:'');
+    document.getElementById('compareTab-'+t).className='chart-tab'+(t===currentTab?' active '+currentTab:'');
   });
-  setTimeout(()=>{drawBarChart();drawLineChart();populateCustomSelects();drawCustomChart();},50);
+  setTimeout(()=>{drawBarChart();drawLineChart();populateCustomSelects();drawCustomChart();populateCompareSelects();drawCompareChart();},50);
 }
 function closeCharts(){document.getElementById('chartsOverlay').classList.remove('open');}
 
@@ -950,6 +984,111 @@ function confirmPaste(){
   });
   save();renderPanel(tab);closePaste();
   alert(`✓ Εισήχθησαν ${added} εγγραφές${skipped>0?` (${skipped} παραλείφθηκαν ως διπλότυπα)`:''}.`);
+}
+
+// ── COMPARISON CHART ──
+let compareTab='gas';
+let compareChartInst=null;
+
+function setCompareTab(tab){
+  compareTab=tab;
+  ['gas','elec'].forEach(t=>{const el=document.getElementById('compareTab-'+t);el.className='chart-tab'+(t===tab?' active '+tab:'');});
+  populateCompareSelects();drawCompareChart();
+}
+
+function populateCompareSelects(){
+  const tab=compareTab;
+  const sorted=[...state[tab].data].sort((a,b)=>new Date(a.d)-new Date(b.d));
+  ['compareStart1','compareEnd1','compareStart2','compareEnd2'].forEach(id=>{
+    const sel=document.getElementById(id);
+    const old=sel.value;
+    sel.innerHTML='';
+    sorted.forEach(item=>{
+      const dt=new Date(item.d);
+      const o=document.createElement('option');
+      o.value=item.d;
+      o.textContent=dt.getDate()+'/'+(dt.getMonth()+1)+'/'+(dt.getFullYear().toString().slice(2))+(item.p?' ●':'');
+      sel.appendChild(o);
+    });
+    if(old&&[...sel.options].some(o=>o.value===old))sel.value=old;
+  });
+  // Defaults: period A = first half, period B = second half
+  if(sorted.length>=2){
+    const mid=Math.floor(sorted.length/2);
+    document.getElementById('compareStart1').selectedIndex=0;
+    document.getElementById('compareEnd1').selectedIndex=mid-1;
+    document.getElementById('compareStart2').selectedIndex=mid;
+    document.getElementById('compareEnd2').selectedIndex=sorted.length-1;
+  }
+}
+
+function drawCompareChart(){
+  const tab=compareTab;
+  const sorted=[...state[tab].data].sort((a,b)=>new Date(a.d)-new Date(b.d));
+  const withDiff=sorted.map((item,i)=>({...item,diff:+(item.r-(i>0?sorted[i-1].r:item.r)).toFixed(3)}));
+  const unit=tab==='gas'?'m³':'kWh';
+
+  const s1=document.getElementById('compareStart1').value;
+  const e1=document.getElementById('compareEnd1').value;
+  const s2=document.getElementById('compareStart2').value;
+  const e2=document.getElementById('compareEnd2').value;
+  if(!s1||!e1||!s2||!e2)return;
+
+  // Get monthly totals for each period
+  function getMonthlyTotals(start, end){
+    const items=withDiff.filter(x=>x.d>=start&&x.d<=end&&x.diff>0);
+    const months={};
+    items.forEach(item=>{
+      const dt=new Date(item.d);
+      const mk=dt.toLocaleString('el-GR',{month:'short'});
+      if(!months[mk])months[mk]=0;
+      months[mk]+=item.diff;
+    });
+    return months;
+  }
+
+  const months1=getMonthlyTotals(s1,e1);
+  const months2=getMonthlyTotals(s2,e2);
+  const allLabels=[...new Set([...Object.keys(months1),...Object.keys(months2)])];
+
+  // Colors
+  const color1A=tab==='gas'?'rgba(245,158,11,0.45)':'rgba(29,78,216,0.45)';
+  const color1B=tab==='gas'?'#f59e0b':'#1d4ed8';
+  const color2A=tab==='gas'?'rgba(239,68,68,0.7)':'rgba(56,189,248,0.7)';
+  const color2B=tab==='gas'?'#ef4444':'#38bdf8';
+
+  // Update legend
+  const fmt=d=>d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(2,4);
+  document.getElementById('compareLegend1').innerHTML=`<div style="width:12px;height:12px;border-radius:3px;background:${color1B}"></div><span style="color:${color1B}">${fmt(s1)} → ${fmt(e1)}</span>`;
+  document.getElementById('compareLegend2').innerHTML=`<div style="width:12px;height:12px;border-radius:3px;background:${color2B}"></div><span style="color:${color2B}">${fmt(s2)} → ${fmt(e2)}</span>`;
+
+  const ctx=document.getElementById('compareChart');
+  const w=Math.max(allLabels.length*80,ctx.parentElement.clientWidth);
+  ctx.width=w;
+  if(compareChartInst)compareChartInst.destroy();
+  const isDarkMode=document.documentElement.getAttribute('data-theme')!=='light';
+  const gridColor=isDarkMode?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+  const labelColor=isDarkMode?'#5a6380':'#94a3b8';
+
+  compareChartInst=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:allLabels,
+      datasets:[
+        {label:'Περίοδος Α',data:allLabels.map(l=>+(months1[l]||0).toFixed(3)),backgroundColor:color1A,borderColor:color1B,borderWidth:1.5,borderRadius:4},
+        {label:'Περίοδος Β',data:allLabels.map(l=>+(months2[l]||0).toFixed(3)),backgroundColor:color2A,borderColor:color2B,borderWidth:1.5,borderRadius:4},
+        {label:'Trend Β',data:allLabels.map(l=>+(months2[l]||0).toFixed(3)),type:'line',borderColor:color2B,borderWidth:2,pointRadius:4,pointBackgroundColor:color2B,tension:0.3,fill:false}
+      ]
+    },
+    options:{
+      responsive:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>v.dataset.label+': '+v.raw.toFixed(3)+' '+unit}}},
+      scales:{
+        x:{ticks:{color:labelColor,font:{family:'JetBrains Mono',size:10}},grid:{color:gridColor}},
+        y:{ticks:{color:labelColor,font:{family:'JetBrains Mono',size:10}},grid:{color:gridColor}}
+      }
+    }
+  });
 }
 
 load();renderPanel('gas');renderPanel('elec');
