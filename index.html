@@ -698,10 +698,13 @@ function renderPanel(tab){
       const avg=diffs.length?(diffs.reduce((a,b)=>a+b,0)/diffs.length).toFixed(2):'—';
       const max=diffs.length?Math.max(...diffs).toFixed(3):'—';
       const min=diffs.length?Math.min(...diffs).toFixed(3):'—';
+      const days=['Κυρ','Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ'];
       const rows=items.map(item=>{
         const dt=new Date(item.d);
+        const dayName=days[dt.getDay()];
+        const isWeekend=dt.getDay()===0||dt.getDay()===6;
         return`<tr class="${item.p?'prov-row':''}">
-          <td class="td-date">${item.p?'<span class="prov-dot"></span>':''}${dt.getDate()}/${dt.getMonth()+1}</td>
+          <td class="td-date">${item.p?'<span class="prov-dot"></span>':''}${dt.getDate()}/${dt.getMonth()+1} <span style="color:${isWeekend?'var(--gas)':'var(--muted)'};font-size:0.68rem;">${dayName}</span></td>
           ${showTime[tab]?`<td style="color:var(--prov);font-size:0.72rem">${item.t||'—'}</td>`:''}
           <td>${item.r.toFixed(3)}</td>
           <td class="td-diff ${tab} ${item.diff<=0?'zero':''}">${item.diff>0?item.diff.toFixed(3):'—'}</td>
