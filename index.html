@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="el" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -129,8 +129,13 @@
   select{font-family:var(--mono);font-size:0.78rem;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;cursor:pointer;outline:none;width:100%;transition:background 0.2s;}
   select:focus{border-color:var(--text);}
   .toolbar-row{display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
-  .year-section{margin-bottom:28px;}
-  .year-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+  .year-section{margin-bottom:16px;}
+  .year-header{display:flex;align-items:center;gap:12px;margin-bottom:0;cursor:pointer;padding:10px 0;user-select:none;}
+  .year-header:hover .year-title{opacity:0.8;}
+  .year-toggle{font-size:0.75rem;color:var(--muted);transition:transform 0.25s;display:inline-block;margin-right:2px;}
+  .year-section.open .year-toggle{transform:rotate(90deg);}
+  .year-body{display:none;padding-top:12px;}
+  .year-section.open .year-body{display:block;}
   .year-title{font-family:var(--mono);font-size:1rem;font-weight:600;letter-spacing:0.1em;}
   .year-title.gas{color:var(--gas);}.year-title.elec{color:var(--elec);}
   .year-total{font-family:var(--mono);font-size:1rem;font-weight:600;background:var(--surface);border:1px solid var(--border);padding:3px 10px;border-radius:20px;white-space:nowrap;}
@@ -748,9 +753,14 @@ function renderPanel(tab){
         </table>
       </div>`;
     }).join('')+'</div>';
-    return`<div class="year-section">
-      <div class="year-header"><div class="year-title ${tab}">${yr}</div><div class="year-total ${tab}">${yearTotal} ${unit} σύνολο</div><div class="year-line"></div></div>
-      ${monthsHTML}
+    return`<div class="year-section${parseInt(yr)===curYr?' open':''}">
+      <div class="year-header" onclick="toggleYear(this)">
+        <span class="year-toggle">▶</span>
+        <div class="year-title ${tab}">${yr}</div>
+        <div class="year-total ${tab}">${yearTotal} ${unit} σύνολο</div>
+        <div class="year-line"></div>
+      </div>
+      <div class="year-body">${monthsHTML}</div>
     </div>`;
   }).join('');
 }
@@ -1079,6 +1089,10 @@ function drawCompareChart(){
       }
     }
   });
+}
+
+function toggleYear(header){
+  header.closest('.year-section').classList.toggle('open');
 }
 
 load();renderPanel('gas');renderPanel('elec');
