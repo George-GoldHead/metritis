@@ -1,4 +1,4 @@
-const CACHE = 'metrhtis-v15';
+const CACHE = 'metrhtis-v16';
 const ASSETS = [
   './manifest.json',
   './icon-192.png',
