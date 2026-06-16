@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="el" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -126,6 +126,26 @@
   .period-label{font-family:var(--mono);font-size:0.57rem;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
   .period-selects{display:flex;align-items:center;gap:8px;}
   .period-selects select{flex:1;}
+
+  /* Custom dropdown */
+  .csel{position:relative;flex:1;}
+  .csel-btn{width:100%;font-family:var(--mono);font-size:0.78rem;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 30px 8px 10px;cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;transition:background 0.15s;}
+  .csel-btn:hover{border-color:var(--muted);}
+  .csel-btn.open{border-color:var(--muted);}
+  .csel-btn::after{content:'▾';font-size:0.7rem;color:var(--muted);margin-left:6px;flex-shrink:0;}
+  .csel-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;z-index:200;max-height:280px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+  .csel-dropdown.open{display:block;}
+  .csel-month{display:flex;align-items:center;gap:6px;padding:7px 10px;font-family:var(--mono);font-size:0.68rem;color:var(--muted);cursor:pointer;background:var(--surface);border-bottom:1px solid var(--border);letter-spacing:0.06em;text-transform:uppercase;font-weight:600;user-select:none;}
+  .csel-month:hover{color:var(--text);}
+  .csel-month-toggle{font-size:0.6rem;transition:transform 0.2s;display:inline-block;}
+  .csel-month.open .csel-month-toggle{transform:rotate(90deg);}
+  .csel-days{display:none;}
+  .csel-month.open + .csel-days{display:block;}
+  .csel-day{padding:6px 10px 6px 22px;font-family:var(--mono);font-size:0.75rem;color:var(--text);cursor:pointer;border-bottom:1px solid rgba(42,47,74,0.3);display:flex;align-items:center;gap:6px;}
+  .csel-day:hover{background:var(--border);}
+  .csel-day.selected{color:var(--gas);font-weight:700;}
+  .csel-day.selected.elec{color:var(--elec);}
+  .csel-day.is-prov::after{content:'●';font-size:0.5rem;color:var(--prov);margin-left:4px;}
   select{font-family:var(--mono);font-size:0.78rem;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 10px;cursor:pointer;outline:none;width:100%;transition:background 0.2s;}
   select:focus{border-color:var(--text);}
   .toolbar-row{display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
@@ -142,12 +162,17 @@
   .year-total.gas{color:var(--gas);}
   .year-total.elec{color:var(--elec);}
   .year-line{flex:1;height:1px;background:var(--border);}
-  .months-row{display:flex;flex-direction:row;gap:12px;overflow-x:auto;padding-bottom:12px;width:100%;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
-  .months-row::-webkit-scrollbar{height:4px;}
-  .months-row::-webkit-scrollbar-track{background:var(--surface);border-radius:10px;}
+  .months-row{display:flex;flex-direction:row;gap:12px;overflow-x:auto;padding-bottom:8px;width:100%;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+  .months-row::-webkit-scrollbar{height:8px;}
+  .months-row::-webkit-scrollbar-track{background:var(--surface2);border-radius:10px;}
   .months-row::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
+  .months-row::-webkit-scrollbar-thumb:hover{background:var(--muted);}
   .month-card{min-width:calc(100vw - 44px);max-width:calc(100vw - 44px);flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;scroll-snap-align:start;transition:background 0.2s;}
   @media(min-width:600px){.month-card{min-width:290px;max-width:290px;}}
+  .months-nav{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+  .months-nav-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.8rem;transition:all 0.15s;}
+  .months-nav-btn:hover{border-color:var(--text);color:var(--text);}
+  .months-nav-label{font-family:var(--mono);font-size:0.65rem;color:var(--muted);}
   .month-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface2);}
   .month-name{font-family:var(--sans);font-size:0.85rem;font-weight:700;text-transform:capitalize;color:var(--text);}
   .month-total{font-family:var(--mono);font-size:0.68rem;background:var(--surface);border:1px solid var(--border);color:var(--gas);padding:3px 9px;border-radius:20px;}
@@ -279,9 +304,9 @@
     <div class="period-row">
       <div class="period-label">Περίοδος Παρόχου:</div>
       <div class="period-selects">
-        <select id="gas-selStart" onchange="renderPanel('gas')"></select>
+        <div class="csel" id="csel-gas-start"></div>
         <span style="color:var(--muted)">→</span>
-        <select id="gas-selEnd" onchange="renderPanel('gas')"></select>
+        <div class="csel" id="csel-gas-end"></div>
       </div>
     </div>
     <div class="toolbar-row">
@@ -298,9 +323,9 @@
     <div class="period-row">
       <div class="period-label">Περίοδος Παρόχου:</div>
       <div class="period-selects">
-        <select id="elec-selStart" onchange="renderPanel('elec')"></select>
+        <div class="csel" id="csel-elec-start"></div>
         <span style="color:var(--muted)">→</span>
-        <select id="elec-selEnd" onchange="renderPanel('elec')"></select>
+        <div class="csel" id="csel-elec-end"></div>
       </div>
     </div>
     <div class="toolbar-row">
@@ -671,22 +696,19 @@ function toggleTime(tab){
 function renderPanel(tab){
   const unit=tab==='gas'?'m³':'kWh';
   const sorted=[...state[tab].data].sort((a,b)=>new Date(a.d+'T'+(a.t||'08:00'))-new Date(b.d+'T'+(b.t||'08:00')));
-  const selStart=document.getElementById(tab+'-selStart');
-  const selEnd=document.getElementById(tab+'-selEnd');
-  const oldStart=selStart.value,oldEnd=selEnd.value;
-  selStart.innerHTML='';selEnd.innerHTML='';
-  sorted.forEach(item=>{
-    const dt=new Date(item.d);
-    const label=dt.getDate()+'/'+(dt.getMonth()+1)+(item.p?' ●':'');
-    const val=item.d+'T'+(item.t||'08:00');
-    [selStart,selEnd].forEach(s=>{const o=document.createElement('option');o.value=val;o.textContent=label;s.appendChild(o);});
-  });
+  // Custom dropdown values
+  const startKey='csel_'+tab+'_start';
+  const endKey='csel_'+tab+'_end';
   const provDates=sorted.filter(x=>x.p);
-  selStart.value=(oldStart&&[...selStart.options].some(o=>o.value===oldStart))?oldStart
-    :(provDates.length>=2?provDates[provDates.length-2].d+'T'+(provDates[provDates.length-2].t||'08:00'):selStart.options[0]?.value||'');
-  selEnd.value=(oldEnd&&[...selEnd.options].some(o=>o.value===oldEnd))?oldEnd
-    :(provDates.length>=1?provDates[provDates.length-1].d+'T'+(provDates[provDates.length-1].t||'08:00'):selEnd.options[selEnd.options.length-1]?.value||'');
-  const startDT=new Date(selStart.value),endDT=new Date(selEnd.value);
+  if(!window[startKey]||!sorted.find(x=>x.d+'T'+(x.t||'08:00')===window[startKey])){
+    window[startKey]=provDates.length>=2?provDates[provDates.length-2].d+'T'+(provDates[provDates.length-2].t||'08:00'):sorted[0]?.d+'T'+(sorted[0]?.t||'08:00')||'';
+  }
+  if(!window[endKey]||!sorted.find(x=>x.d+'T'+(x.t||'08:00')===window[endKey])){
+    window[endKey]=provDates.length>=1?provDates[provDates.length-1].d+'T'+(provDates[provDates.length-1].t||'08:00'):sorted[sorted.length-1]?.d+'T'+(sorted[sorted.length-1]?.t||'08:00')||'';
+  }
+  buildCsel('csel-'+tab+'-start',window[startKey],tab);
+  buildCsel('csel-'+tab+'-end',window[endKey],tab);
+  const startDT=new Date(window[startKey]),endDT=new Date(window[endKey]);
   const withDiff=sorted.map((item,idx)=>({...item,diff:+(item.r-(idx>0?sorted[idx-1].r:item.r)).toFixed(3)}));
   const years={};
   withDiff.forEach(item=>{
@@ -698,18 +720,19 @@ function renderPanel(tab){
     years[yr][mk].items.push(item);
   });
   const now=new Date(),curYr=now.getFullYear();
-  const beforeEnd=withDiff.filter(x=>new Date(x.d+'T'+(x.t||'08:00'))<=endDT);
-  const beforeStart=withDiff.filter(x=>new Date(x.d+'T'+(x.t||'08:00'))<=startDT);
   const periodItems=withDiff.filter(x=>{
     const dt=new Date(x.d+'T'+(x.t||'08:00'));
-    return dt>new Date(selStart.value)&&dt<=endDT;
+    return dt>startDT&&dt<=endDT;
   });
   const sumProvider=+periodItems.map(x=>x.diff).filter(d=>d>0).reduce((a,b)=>a+b,0).toFixed(3);
   const curYearItems=withDiff.filter(x=>new Date(x.d).getFullYear()===curYr);
   const sumYear=+curYearItems.map(x=>x.diff).filter(d=>d>0).reduce((a,b)=>a+b,0).toFixed(3);
   document.getElementById(tab+'-sumProvider').textContent=sumProvider.toFixed(3)+' '+unit;
-  const ps=selStart.options[selStart.selectedIndex]?.textContent.replace(' ●','')||'—';
-  const pe=selEnd.options[selEnd.selectedIndex]?.textContent.replace(' ●','')||'—';
+  // Label from selected item
+  const selStartItem=sorted.find(x=>x.d+'T'+(x.t||'08:00')===window[startKey]);
+  const selEndItem=sorted.find(x=>x.d+'T'+(x.t||'08:00')===window[endKey]);
+  const ps=selStartItem?new Date(selStartItem.d).getDate()+'/'+(new Date(selStartItem.d).getMonth()+1):'—';
+  const pe=selEndItem?new Date(selEndItem.d).getDate()+'/'+(new Date(selEndItem.d).getMonth()+1):'—';
   document.getElementById(tab+'-sumProviderLabel').textContent=ps+' → '+pe;
   document.getElementById(tab+'-sumYear').textContent=sumYear.toFixed(3)+' '+unit;
   document.getElementById(tab+'-sumYearLabel').textContent='έτος '+curYr;
@@ -720,7 +743,8 @@ function renderPanel(tab){
     const monthKeys=Object.keys(years[yr]).sort();
     const yrItems=Object.values(years[yr]).flatMap(m=>m.items).sort((a,b)=>new Date(a.d)-new Date(b.d));
     const yearTotal=yrItems.map(x=>x.diff).filter(d=>d>0).reduce((a,b)=>a+b,0).toFixed(3);
-    const monthsHTML='<div class="months-row">'+monthKeys.map(mk=>{
+    const curMk=`${curYr}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const monthsHTML='<div class="months-nav"><button class="months-nav-btn" onclick="scrollMonths(this,-1)">◀</button><button class="months-nav-btn" onclick="scrollMonths(this,1)">▶</button><span class="months-nav-label" id="mnav-'+tab+'-'+yr+'"></span></div><div class="months-row" id="mrow-'+tab+'-'+yr+'">'+monthKeys.map((mk,idx)=>{
       const{label,items}=years[yr][mk];
       const diffs=items.map(x=>x.diff).filter(d=>d>0);
       const mTotal=diffs.reduce((a,b)=>a+b,0).toFixed(3);
@@ -740,7 +764,7 @@ function renderPanel(tab){
           <td><button class="del-btn" data-del="${tab}_${item.id}" onclick="editEntry('${tab}',${item.id})" style="margin-right:2px;" title="Επεξεργασία">✎</button><button class="del-btn" data-del="${tab}_${item.id}" onclick="delEntry('${tab}',${item.id})">✕</button></td>
         </tr>`;
       }).join('');
-      return`<div class="month-card">
+      return`<div class="month-card" data-mk="${mk}">
         <div class="month-head"><div class="month-name">${label}</div><div class="month-total">${mTotal} ${unit}</div></div>
         <div class="month-stats">
           <div class="stat-item"><div class="stat-label">Μέσος</div><div class="stat-value avg ${tab}">${avg}</div></div>
@@ -1091,11 +1115,102 @@ function drawCompareChart(){
   });
 }
 
+function scrollMonths(btn, dir){
+  const row=btn.closest('.year-body').querySelector('.months-row');
+  const cardW=row.querySelector('.month-card')?.offsetWidth+12||302;
+  row.scrollBy({left:dir*cardW,behavior:'smooth'});
+}
+
+function scrollToCurrentMonth(){
+  const now=new Date();
+  const curMk=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.querySelectorAll('.months-row').forEach(row=>{
+    const card=row.querySelector(`[data-mk="${curMk}"]`);
+    if(card){
+      setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'}),100);
+    }
+  });
+}
+
+// ── CUSTOM DROPDOWN ──
+function buildCsel(containerId, selectedVal, tab){
+  const container=document.getElementById(containerId);
+  if(!container)return;
+  const sorted2=[...state[tab].data].sort((a,b)=>new Date(a.d+'T'+(a.t||'08:00'))-new Date(b.d+'T'+(b.t||'08:00')));
+  const monthGroups2={};const monthKeys3=[];
+  sorted2.forEach(item=>{
+    const mk=item.d.slice(0,7);
+    const dt=new Date(item.d);
+    const mlabel=dt.toLocaleString('el-GR',{month:'long'})+' '+dt.getFullYear();
+    if(!monthGroups2[mk]){monthGroups2[mk]={label:mlabel,items:[]};monthKeys3.push(mk);}
+    monthGroups2[mk].items.push(item);
+  });
+  const selItem=sorted2.find(x=>x.d+'T'+(x.t||'08:00')===selectedVal);
+  const selLabel=selItem?new Date(selItem.d).getDate()+'/'+(new Date(selItem.d).getMonth()+1)+(selItem.p?' ●':''):'—';
+  const uid=containerId;
+  container.innerHTML=`
+    <button class="csel-btn" id="btn-${uid}" onclick="toggleCsel('${uid}')">${selLabel}</button>
+    <div class="csel-dropdown" id="drop-${uid}">
+      ${monthKeys3.map(mk=>{
+        const mg=monthGroups2[mk];
+        const hasSelected=mg.items.some(x=>x.d+'T'+(x.t||'08:00')===selectedVal);
+        return`<div class="csel-month${hasSelected?' open':''}" onclick="toggleCselMonth(this)">
+          <span class="csel-month-toggle">▶</span>${mg.label}
+        </div>
+        <div class="csel-days"${hasSelected?' style="display:block"':''}>
+          ${mg.items.map(item=>{
+            const dt=new Date(item.d);
+            const val=item.d+'T'+(item.t||'08:00');
+            const isSel=val===selectedVal;
+            return`<div class="csel-day${isSel?' selected':''} ${tab}${item.p?' is-prov':''}"
+              data-val="${val}" onclick="selectCselDay(this,'${uid}','${tab}')">${dt.getDate()}/${dt.getMonth()+1}</div>`;
+          }).join('')}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function toggleCsel(uid){
+  const drop=document.getElementById('drop-'+uid);
+  const btn=document.getElementById('btn-'+uid);
+  const isOpen=drop.classList.contains('open');
+  // Close all other dropdowns
+  document.querySelectorAll('.csel-dropdown.open').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.csel-btn.open').forEach(b=>b.classList.remove('open'));
+  if(!isOpen){drop.classList.add('open');btn.classList.add('open');}
+}
+
+function toggleCselMonth(el){
+  el.classList.toggle('open');
+  const days=el.nextElementSibling;
+  if(days)days.style.display=el.classList.contains('open')?'block':'none';
+}
+
+function selectCselDay(el, uid, tab){
+  const val=el.dataset.val;
+  const isStart=uid.includes('-start');
+  const key='csel_'+tab+'_'+(isStart?'start':'end');
+  window[key]=val;
+  // Close dropdown
+  document.getElementById('drop-'+uid).classList.remove('open');
+  document.getElementById('btn-'+uid).classList.remove('open');
+  renderPanel(tab);
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.csel')){
+    document.querySelectorAll('.csel-dropdown.open').forEach(d=>d.classList.remove('open'));
+    document.querySelectorAll('.csel-btn.open').forEach(b=>b.classList.remove('open'));
+  }
+});
+
 function toggleYear(header){
   header.closest('.year-section').classList.toggle('open');
 }
 
 load();renderPanel('gas');renderPanel('elec');
+setTimeout(scrollToCurrentMonth,200);
 </script>
 <script>
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
